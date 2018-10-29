@@ -10,7 +10,7 @@ cfiles = listdir(cwd)
 
 for files in cfiles:
     if files[0] == ".":
-        del cfiles[cfiles.index(files)]
+        cfiles.pop(cfiles.index(files))
     else:
         continue
 
@@ -205,6 +205,7 @@ while True:
 
     elif key == KEY_RIGHT:
         if os.path.isdir(cfiles[cfile]):
+            scrolled = False
             s.clear()
             s.refresh()
             chdir(cfiles[cfile])
@@ -217,11 +218,6 @@ while True:
 
             count=0
 
-            for files in cfiles:
-                if files[0] == ".":
-                    del cfiles[cfiles.index(files)]
-                else:
-                    continue
             for files in cfiles:
                 if count != my-2:
                     count += 1
@@ -245,6 +241,7 @@ while True:
         else:
             continue
     elif key == KEY_LEFT:
+        scrolled = False
         s.clear()
         s.refresh()
         chdir("..")
@@ -256,12 +253,6 @@ while True:
         s.move(1,1)            
 
         count=0
-
-        for files in cfiles:
-            if files[0] == ".":
-                del cfiles[cfiles.index(files)]
-            else:
-                continue
         for files in cfiles:
             if count != my-2:
                 count += 1
