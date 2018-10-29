@@ -8,11 +8,14 @@ import os.path
 cwd = getcwd()
 cfiles = listdir(cwd)
 
-for files in cfiles:
+index=0
+
+while index < len(cfiles):
+    files = cfiles[index]
     if files[0] == ".":
         cfiles.pop(cfiles.index(files))
     else:
-        continue
+        index += 1
 
 s = initscr()
 
@@ -72,20 +75,20 @@ while True:
         if cfile != len(cfiles)-1 and cy != my-2 and scrolled == False:
             if os.path.isdir(cfiles[cfile]):
                 s.addstr(cfiles[cfile], color_pair(13))
-                s.move(cy,cx)
+                s.move(cy,1)
             else:
                 s.addstr(cfiles[cfile], color_pair(0))
-                s.move(cy,cx)
+                s.move(cy,1)
 
             cfile += 1
             cy += 1 
             s.move(cy, 1)
             if os.path.isdir(cfiles[cfile]):
                 s.addstr(cfiles[cfile], color_pair(13) + A_REVERSE)
-                s.move(cy,cx)
+                s.move(cy,1)
             else:
                 s.addstr(cfiles[cfile], color_pair(0) + A_REVERSE)
-                s.move(cy,cx)
+                s.move(cy,1)
         else:
             if cfile == len(cfiles)-1 or new[-1:] == cfiles[-1:] and cy == my-2:
                 continue
@@ -118,20 +121,20 @@ while True:
             elif cy != my-2 and scrolled == True:
                 if os.path.isdir(new[cfile]):
                     s.addstr(new[cfile], color_pair(13))
-                    s.move(cy,cx)
+                    s.move(cy,1)
                 else:
                     s.addstr(new[cfile], color_pair(0))
-                    s.move(cy,cx)
+                    s.move(cy,1)
 
                 cfile += 1
                 cy += 1 
                 s.move(cy, 1)
                 if os.path.isdir(new[cfile]):
                     s.addstr(new[cfile], color_pair(13) + A_REVERSE)
-                    s.move(cy,cx)
+                    s.move(cy,1)
                 else:
                     s.addstr(new[cfile], color_pair(0) + A_REVERSE)
-                    s.move(cy,cx)
+                    s.move(cy,1)
                 
     elif key == KEY_UP:
             if cfile != 0 and cy != 1 and scrolled == False:
@@ -218,6 +221,15 @@ while True:
 
             count=0
 
+            index=0
+
+            while index < len(cfiles):
+                files = cfiles[index]
+                if files[0] == ".":
+                    cfiles.pop(cfiles.index(files))
+                else:
+                    index += 1
+
             for files in cfiles:
                 if count != my-2:
                     count += 1
@@ -253,6 +265,16 @@ while True:
         s.move(1,1)            
 
         count=0
+
+        index=0
+
+        while index < len(cfiles):
+            files = cfiles[index]
+            if files[0] == ".":
+                cfiles.pop(cfiles.index(files))
+            else:
+                index += 1
+
         for files in cfiles:
             if count != my-2:
                 count += 1
