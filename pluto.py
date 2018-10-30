@@ -4,11 +4,44 @@ from curses import *
 from os import *
 from sys import *
 import os.path
+import io
 
 cwd = getcwd()
 cfiles = listdir(cwd)
 
+home = os.path.expanduser("~")
+
+chdir(home)
+
+s = initscr()
+
+comment = False
+
+file_color=0
+dir_color=13
+sel_format="high"
+rm="d"
+
+if os.path.isfile(".plutorc"):
+    with io.open(".plutorc", "r") as config:
+        for line in config:
+            if line[0] == "#" or line.isspace() or len(line) == 0:
+                continue
+            elif ":" in list(line) and "#" not in list(line):
+                cvar = line.split(":")[0]
+                cval = line.split(":")[1]
+                if cvar == "file":
+                    file_color = int(cval)
+                if cvar == "dir":
+                    dir_color = int(cval)
+            else:
+                endwin()
+                print("\033[101mError -->\033[0m " + "\033[1m" + line.rstrip() + "\033[0m is invalid")
+                exit()
+
 index=0
+
+chdir(cwd)
 
 while index < len(cfiles):
     files = cfiles[index]
@@ -16,8 +49,6 @@ while index < len(cfiles):
         cfiles.pop(cfiles.index(files))
     else:
         index += 1
-
-s = initscr()
 
 new=[]
 
@@ -47,9 +78,9 @@ for files in cfiles:
         count += 1
         s.move(count, 1)
         if os.path.isdir(files):
-            s.addstr(files, color_pair(13))
+            s.addstr(files, color_pair(dir_color))
         else:
-            s.addstr(files, color_pair(0))
+            s.addstr(files, color_pair(file_color))
         s.move(count,1)
     else:
         break
@@ -57,10 +88,10 @@ for files in cfiles:
 s.move(1,1)
 
 if os.path.isdir(cfiles[0]):
-    s.addstr(cfiles[0], color_pair(13) + A_REVERSE)
+    s.addstr(cfiles[0], color_pair(dir_color) + A_REVERSE)
     s.move(1,1)
 else:
-    s.addstr(cfiles[0], color_pair(0) + A_REVERSE)
+    s.addstr(cfiles[0], color_pair(file_color) + A_REVERSE)
     s.move(1,1)
 
 cfile = 0
@@ -74,20 +105,20 @@ while True:
     elif key == KEY_DOWN:
         if cfile != len(cfiles)-1 and cy != my-2 and scrolled == False:
             if os.path.isdir(cfiles[cfile]):
-                s.addstr(cfiles[cfile], color_pair(13))
+                s.addstr(cfiles[cfile], color_pair(dir_color))
                 s.move(cy,1)
             else:
-                s.addstr(cfiles[cfile], color_pair(0))
+                s.addstr(cfiles[cfile], color_pair(file_color))
                 s.move(cy,1)
 
             cfile += 1
             cy += 1 
             s.move(cy, 1)
             if os.path.isdir(cfiles[cfile]):
-                s.addstr(cfiles[cfile], color_pair(13) + A_REVERSE)
+                s.addstr(cfiles[cfile], color_pair(dir_color) + A_REVERSE)
                 s.move(cy,1)
             else:
-                s.addstr(cfiles[cfile], color_pair(0) + A_REVERSE)
+                s.addstr(cfiles[cfile], color_pair(file_color) + A_REVERSE)
                 s.move(cy,1)
         else:
             if cfile == len(cfiles)-1 or new[-1:] == cfiles[-1:] and cy == my-2:
@@ -105,54 +136,55 @@ while True:
                         count += 1
                         s.move(count, 1)
                         if os.path.isdir(files):
-                            s.addstr(files, color_pair(13))
+                            s.addstr(files, color_pair(dir_color))
+                            s.move(count,1)
                         else:
-                            s.addstr(files, color_pair(0))
+                            s.addstr(files, color_pair(file_color))
                             s.move(count,1)
                     else:
                         break
 
                 if os.path.isdir(new[cfile]):
-                    s.addstr(new[cfile], color_pair(13) + A_REVERSE)
+                    s.addstr(new[cfile], color_pair(dir_color) + A_REVERSE)
                     s.move(cy,cx)
                 else:
-                    s.addstr(new[cfile], color_pair(0) + A_REVERSE)
+                    s.addstr(new[cfile], color_pair(file_color) + A_REVERSE)
                     s.move(cy,cx)
             elif cy != my-2 and scrolled == True:
                 if os.path.isdir(new[cfile]):
-                    s.addstr(new[cfile], color_pair(13))
+                    s.addstr(new[cfile], color_pair(dir_color))
                     s.move(cy,1)
                 else:
-                    s.addstr(new[cfile], color_pair(0))
+                    s.addstr(new[cfile], color_pair(file_color))
                     s.move(cy,1)
 
                 cfile += 1
                 cy += 1 
                 s.move(cy, 1)
                 if os.path.isdir(new[cfile]):
-                    s.addstr(new[cfile], color_pair(13) + A_REVERSE)
+                    s.addstr(new[cfile], color_pair(dir_color) + A_REVERSE)
                     s.move(cy,1)
                 else:
-                    s.addstr(new[cfile], color_pair(0) + A_REVERSE)
+                    s.addstr(new[cfile], color_pair(file_color) + A_REVERSE)
                     s.move(cy,1)
                 
     elif key == KEY_UP:
             if cfile != 0 and cy != 1 and scrolled == False:
                 if os.path.isdir(cfiles[cfile]):
-                    s.addstr(cfiles[cfile], color_pair(13))
+                    s.addstr(cfiles[cfile], color_pair(dir_color))
                     s.move(cy,cx)
                 else:
-                    s.addstr(cfiles[cfile], color_pair(0))
+                    s.addstr(cfiles[cfile], color_pair(file_color))
                     s.move(cy,cx)
 
                 cfile -= 1
                 cy -= 1 
                 s.move(cy, 1)
                 if os.path.isdir(cfiles[cfile]):
-                    s.addstr(cfiles[cfile], color_pair(13) + A_REVERSE)
+                    s.addstr(cfiles[cfile], color_pair(dir_color) + A_REVERSE)
                     s.move(cy,cx)
                 else:
-                    s.addstr(cfiles[cfile], color_pair(0) + A_REVERSE)
+                    s.addstr(cfiles[cfile], color_pair(file_color) + A_REVERSE)
                     s.move(cy,cx)
             else:
                 if scrolled == False:
@@ -160,20 +192,20 @@ while True:
                 elif scrolled == True:
                     if cy != 1:
                         if os.path.isdir(new[cfile]):
-                            s.addstr(new[cfile], color_pair(13))
+                            s.addstr(new[cfile], color_pair(dir_color))
                             s.move(cy,cx)
                         else:
-                            s.addstr(new[cfile], color_pair(0))
+                            s.addstr(new[cfile], color_pair(file_color))
                             s.move(cy,cx)
 
                         cfile -= 1
                         cy -= 1 
                         s.move(cy, 1)
                         if os.path.isdir(new[cfile]):
-                            s.addstr(new[cfile], color_pair(13) + A_REVERSE)
+                            s.addstr(new[cfile], color_pair(dir_color) + A_REVERSE)
                             s.move(cy,cx)
                         else:
-                            s.addstr(new[cfile], color_pair(0) + A_REVERSE)
+                            s.addstr(new[cfile], color_pair(file_color) + A_REVERSE)
                             s.move(cy,cx)
                     elif cy == 1 and cfiles[0] != new[0]:
                         s.clear()
@@ -187,9 +219,9 @@ while True:
                                 count += 1
                                 s.move(count, 1)
                                 if os.path.isdir(files):
-                                    s.addstr(files, color_pair(13))
+                                    s.addstr(files, color_pair(dir_color))
                                 else:
-                                    s.addstr(files, color_pair(0))
+                                    s.addstr(files, color_pair(file_color))
                                     s.move(count,1)
                             else:
                                 break
@@ -198,10 +230,10 @@ while True:
                         cfile=0
 
                         if os.path.isdir(new[cfile]):
-                            s.addstr(new[cfile], color_pair(13) + A_REVERSE)
+                            s.addstr(new[cfile], color_pair(dir_color) + A_REVERSE)
                             s.move(cy,cx)
                         else:
-                            s.addstr(new[cfile], color_pair(0) + A_REVERSE)
+                            s.addstr(new[cfile], color_pair(file_color) + A_REVERSE)
                             s.move(cy,cx)
                     else:
                         continue
@@ -235,9 +267,9 @@ while True:
                     count += 1
                     s.move(count, 1)
                     if os.path.isdir(files):
-                        s.addstr(files, color_pair(13))
+                        s.addstr(files, color_pair(dir_color))
                     else:
-                        s.addstr(files, color_pair(0))
+                        s.addstr(files, color_pair(file_color))
                     s.move(count,1)
                 else:
                     break
@@ -245,10 +277,10 @@ while True:
             s.move(1,1)            
 
             if os.path.isdir(cfiles[0]):
-                s.addstr(cfiles[0], color_pair(13) + A_REVERSE)
+                s.addstr(cfiles[0], color_pair(dir_color) + A_REVERSE)
                 s.move(1,1)
             else:
-                s.addstr(cfiles[0], color_pair(0) + A_REVERSE)
+                s.addstr(cfiles[0], color_pair(file_color) + A_REVERSE)
                 s.move(1,1)
         else:
             continue
@@ -280,9 +312,9 @@ while True:
                 count += 1
                 s.move(count, 1)
                 if os.path.isdir(files):
-                    s.addstr(files, color_pair(13))
+                    s.addstr(files, color_pair(dir_color))
                 else:
-                    s.addstr(files, color_pair(0))
+                    s.addstr(files, color_pair(file_color))
                 s.move(count,1)
             else:
                 break
@@ -290,12 +322,16 @@ while True:
         s.move(1,1)            
 
         if os.path.isdir(cfiles[0]):
-            s.addstr(cfiles[0], color_pair(13) + A_REVERSE)
+            s.addstr(cfiles[0], color_pair(dir_color) + A_REVERSE)
             s.move(1,1)
         else:
-            s.addstr(cfiles[0], color_pair(0) + A_REVERSE)
-            s.move(1,1)       
+            s.addstr(cfiles[0], color_pair(file_color) + A_REVERSE)
+            s.move(1,1)
+    elif key == ord("d"):
+        if scrolled == False:
+            system("rm -rf " + cfiles[cfile])
+        else:
+            system("rm -rf " + new[cfile])
     else:
         continue
-
 endwin()
