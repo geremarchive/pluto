@@ -19,8 +19,7 @@ comment = False
 
 file_color=0
 dir_color=13
-sel_format="high"
-rm="d"
+sel_fmt=A_REVERSE
 
 if os.path.isfile(".plutorc"):
     with io.open(".plutorc", "r") as config:
@@ -32,8 +31,16 @@ if os.path.isfile(".plutorc"):
                 cval = line.split(":")[1]
                 if cvar == "file":
                     file_color = int(cval)
-                if cvar == "dir":
+                elif cvar == "dir":
                     dir_color = int(cval)
+                elif cvar == "sel":
+                    if cval.rstrip() == "bold":
+                        sel_fmt=A_BOLD
+                    elif cval.rstrip() == "rev":
+                        sel_fmt=A_REVERSE
+                    elif cval.rstrip() == "underline":
+                        sel_fmt=A_UNDERLINE
+
             else:
                 endwin()
                 print("\033[101mError -->\033[0m " + "\033[1m" + line.rstrip() + "\033[0m is invalid")
@@ -42,13 +49,6 @@ if os.path.isfile(".plutorc"):
 index=0
 
 chdir(cwd)
-
-while index < len(cfiles):
-    files = cfiles[index]
-    if files[0] == ".":
-        cfiles.pop(cfiles.index(files))
-    else:
-        index += 1
 
 new=[]
 
@@ -88,10 +88,10 @@ for files in cfiles:
 s.move(1,1)
 
 if os.path.isdir(cfiles[0]):
-    s.addstr(cfiles[0], color_pair(dir_color) + A_REVERSE)
+    s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
     s.move(1,1)
 else:
-    s.addstr(cfiles[0], color_pair(file_color) + A_REVERSE)
+    s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
     s.move(1,1)
 
 cfile = 0
@@ -115,10 +115,10 @@ while True:
             cy += 1 
             s.move(cy, 1)
             if os.path.isdir(cfiles[cfile]):
-                s.addstr(cfiles[cfile], color_pair(dir_color) + A_REVERSE)
+                s.addstr(cfiles[cfile], color_pair(dir_color) + sel_fmt)
                 s.move(cy,1)
             else:
-                s.addstr(cfiles[cfile], color_pair(file_color) + A_REVERSE)
+                s.addstr(cfiles[cfile], color_pair(file_color) + sel_fmt)
                 s.move(cy,1)
         else:
             if cfile == len(cfiles)-1 or new[-1:] == cfiles[-1:] and cy == my-2:
@@ -145,10 +145,10 @@ while True:
                         break
 
                 if os.path.isdir(new[cfile]):
-                    s.addstr(new[cfile], color_pair(dir_color) + A_REVERSE)
+                    s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
                     s.move(cy,cx)
                 else:
-                    s.addstr(new[cfile], color_pair(file_color) + A_REVERSE)
+                    s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
                     s.move(cy,cx)
             elif cy != my-2 and scrolled == True:
                 if os.path.isdir(new[cfile]):
@@ -162,10 +162,10 @@ while True:
                 cy += 1 
                 s.move(cy, 1)
                 if os.path.isdir(new[cfile]):
-                    s.addstr(new[cfile], color_pair(dir_color) + A_REVERSE)
+                    s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
                     s.move(cy,1)
                 else:
-                    s.addstr(new[cfile], color_pair(file_color) + A_REVERSE)
+                    s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
                     s.move(cy,1)
                 
     elif key == KEY_UP:
@@ -181,10 +181,10 @@ while True:
                 cy -= 1 
                 s.move(cy, 1)
                 if os.path.isdir(cfiles[cfile]):
-                    s.addstr(cfiles[cfile], color_pair(dir_color) + A_REVERSE)
+                    s.addstr(cfiles[cfile], color_pair(dir_color) + sel_fmt)
                     s.move(cy,cx)
                 else:
-                    s.addstr(cfiles[cfile], color_pair(file_color) + A_REVERSE)
+                    s.addstr(cfiles[cfile], color_pair(file_color) + sel_fmt)
                     s.move(cy,cx)
             else:
                 if scrolled == False:
@@ -202,10 +202,10 @@ while True:
                         cy -= 1 
                         s.move(cy, 1)
                         if os.path.isdir(new[cfile]):
-                            s.addstr(new[cfile], color_pair(dir_color) + A_REVERSE)
+                            s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
                             s.move(cy,cx)
                         else:
-                            s.addstr(new[cfile], color_pair(file_color) + A_REVERSE)
+                            s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
                             s.move(cy,cx)
                     elif cy == 1 and cfiles[0] != new[0]:
                         s.clear()
@@ -230,10 +230,10 @@ while True:
                         cfile=0
 
                         if os.path.isdir(new[cfile]):
-                            s.addstr(new[cfile], color_pair(dir_color) + A_REVERSE)
+                            s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
                             s.move(cy,cx)
                         else:
-                            s.addstr(new[cfile], color_pair(file_color) + A_REVERSE)
+                            s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
                             s.move(cy,cx)
                     else:
                         continue
@@ -277,10 +277,10 @@ while True:
             s.move(1,1)            
 
             if os.path.isdir(cfiles[0]):
-                s.addstr(cfiles[0], color_pair(dir_color) + A_REVERSE)
+                s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
                 s.move(1,1)
             else:
-                s.addstr(cfiles[0], color_pair(file_color) + A_REVERSE)
+                s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
                 s.move(1,1)
         else:
             continue
@@ -322,10 +322,10 @@ while True:
         s.move(1,1)            
 
         if os.path.isdir(cfiles[0]):
-            s.addstr(cfiles[0], color_pair(dir_color) + A_REVERSE)
+            s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
             s.move(1,1)
         else:
-            s.addstr(cfiles[0], color_pair(file_color) + A_REVERSE)
+            s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
             s.move(1,1)
     elif key == ord("d"):
         if scrolled == False:
