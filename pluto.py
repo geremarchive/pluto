@@ -389,9 +389,12 @@ while True:
                 else:
                     break
             
-            cfile = 0
-            cy, cx = 1, 1
-            s.move(1,1)           
+            if cfile != 0:
+                cfile -= 1
+                cy -= 1 
+                s.move(cy, 1)
+            else:
+                s.move(cy, 1)
             if os.path.isdir(cfiles[cfile]):
                 s.addstr(cfiles[cfile], color_pair(dir_color) + sel_fmt)
                 s.move(cy,cx)
