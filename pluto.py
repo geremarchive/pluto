@@ -23,6 +23,7 @@ sel_fmt=A_REVERSE
 exit_key="q"
 del_key="d"
 home_key="h"
+rename_key="r"
 
 if os.path.isfile(".plutorc"):
     with io.open(".plutorc", "r") as config:
@@ -65,6 +66,8 @@ if os.path.isfile(".plutorc"):
                                         file_color = int(cval)
                                     elif cvar == "dir":
                                         dir_color = int(cval)
+                elif cvar == "rename":
+                    rename_key = str(cval.rstrip())
             else:
                 endwin()
                 print("\033[101mError -->\033[0m " + "\033[1m" + line.rstrip() + "\033[0m is invalid")
@@ -153,6 +156,14 @@ while True:
                 s.move(cy,1)
         else:
             if cfile == len(cfiles)-1 or new[-1:] == cfiles[-1:] and cy == my-2:
+                #endwin()
+                #print(cfile)
+                #print(cfiles)
+                #print(new)
+                #print(new[-1:])
+                #print(cfiles[-1:])
+                #print(cy)
+                #print(my-2)
                 continue
             elif cy == my-2:
                 scrolled = True
@@ -174,13 +185,17 @@ while True:
                             s.move(count,1)
                     else:
                         break
-
-                if os.path.isdir(new[cfile]):
-                    s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
-                    s.move(cy,cx)
-                else:
-                    s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
-                    s.move(cy,cx)
+                try:
+                    if os.path.isdir(new[cfile]):
+                        s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
+                        s.move(cy,cx)
+                    else:
+                        s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
+                        s.move(cy,cx)
+                except:
+                    endwin()
+                    print(cfile)
+                    exit()
             elif cy != my-2 and scrolled == True:
                 if os.path.isdir(new[cfile]):
                     s.addstr(new[cfile], color_pair(dir_color))
@@ -270,17 +285,20 @@ while True:
                         continue
 
     elif key == KEY_RIGHT:
-        if os.path.isdir(cfiles[cfile]):
-            scrolled = False
+        if os.path.isdir(cfiles[cfile]) or os.path.isdir(new[cfile]):
             s.clear()
             s.refresh()
-            chdir(cfiles[cfile])
+            if scrolled == False:
+                chdir(cfiles[cfile])
+            else:
+                chdir(new[cfile])
+            scrolled = False
             cwd = getcwd()
             cfiles.clear()
             cfiles = listdir(cwd)
             cfile = 0
             cy, cx = 1, 1
-            s.move(1,1)            
+            s.move(1,1)
 
             count=0
 
@@ -304,8 +322,7 @@ while True:
                     s.move(count,1)
                 else:
                     break
-            
-            s.move(1,1)            
+            s.move(1,1)
 
             if os.path.isdir(cfiles[0]):
                 s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
@@ -317,15 +334,18 @@ while True:
             continue
     elif key == KEY_LEFT:
         scrolled = False
+        sc1 = my-2
+        sc2 = 0
         s.clear()
         s.refresh()
         chdir("..")
         cwd = getcwd()
         cfiles.clear()
+        new.clear()
         cfiles = listdir(cwd)
         cfile = 0
         cy, cx = 1, 1
-        s.move(1,1)            
+        s.move(1,1)
 
         count=0
 
@@ -491,6 +511,8 @@ while True:
             s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
             s.move(1,1)
 
+    elif key == ord(rename_key):
+        continue
     else:
         continue
 endwin()
