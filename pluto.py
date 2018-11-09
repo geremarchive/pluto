@@ -95,7 +95,7 @@ my, mx = s.getmaxyx()
 noecho()
 s.keypad(1)
 
-count=0
+count=2
 
 sc1 = my-2
 sc2 = 0
@@ -119,17 +119,17 @@ for files in cfiles:
     else:
         break
 
-s.move(1,1)
+s.move(2,1)
 
 if os.path.isdir(cfiles[0]):
     s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
-    s.move(1,1)
+    s.move(2,1)
 else:
     s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
-    s.move(1,1)
+    s.move(2,1)
 
 cfile = 0
-cy, cx = 1, 1
+cy, cx = 2, 1
 
 while True:
     key = s.getch()
@@ -156,14 +156,6 @@ while True:
                 s.move(cy,1)
         else:
             if cfile == len(cfiles)-1 or new[-1:] == cfiles[-1:] and cy == my-2:
-                #endwin()
-                #print(cfile)
-                #print(cfiles)
-                #print(new)
-                #print(new[-1:])
-                #print(cfiles[-1:])
-                #print(cy)
-                #print(my-2)
                 continue
             elif cy == my-2:
                 scrolled = True
@@ -185,17 +177,12 @@ while True:
                             s.move(count,1)
                     else:
                         break
-                try:
-                    if os.path.isdir(new[cfile]):
-                        s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
-                        s.move(cy,cx)
-                    else:
-                        s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
-                        s.move(cy,cx)
-                except:
-                    endwin()
-                    print(cfile)
-                    exit()
+                if os.path.isdir(new[cfile]):
+                    s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
+                    s.move(cy,cx)
+                else:
+                    s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
+                    s.move(cy,cx)
             elif cy != my-2 and scrolled == True:
                 if os.path.isdir(new[cfile]):
                     s.addstr(new[cfile], color_pair(dir_color))
