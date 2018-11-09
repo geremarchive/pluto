@@ -95,7 +95,7 @@ my, mx = s.getmaxyx()
 noecho()
 s.keypad(1)
 
-count=2
+count=0
 
 sc1 = my-2
 sc2 = 0
@@ -119,17 +119,17 @@ for files in cfiles:
     else:
         break
 
-s.move(2,1)
+s.move(1,1)
 
 if os.path.isdir(cfiles[0]):
     s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
-    s.move(2,1)
+    s.move(1,1)
 else:
     s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
-    s.move(2,1)
+    s.move(1,1)
 
 cfile = 0
-cy, cx = 2, 1
+cy, cx = 1, 1
 
 while True:
     key = s.getch()
