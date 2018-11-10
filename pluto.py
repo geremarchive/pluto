@@ -92,6 +92,17 @@ for i in range(0, 256):
 
 my, mx = s.getmaxyx()
 
+def gcwd():
+    #cwd = getcwd()
+    s.move(1,1)
+    if home in cwd:
+        gcwd = cwd.split(home)
+        gcwd[0] = "~"
+        gcwd = str1 = ''.join(gcwd)
+    else:
+        gcwd = cwd
+    s.addstr(gcwd)
+
 noecho()
 s.keypad(1)
 
@@ -272,7 +283,7 @@ while True:
                         continue
 
     elif key == KEY_RIGHT:
-        if os.path.isdir(cfiles[cfile]) or os.path.isdir(new[cfile]):
+        if os.path.isdir(cfiles[cfile]) or scrolled == True and os.path.isdir(new[cfile]):
             s.clear()
             s.refresh()
             if scrolled == False:
