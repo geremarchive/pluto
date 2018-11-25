@@ -137,6 +137,13 @@ def sclear():
             s.addstr(" ")
             s.move(iy , ix)
 
+def notempty(ndir):
+    chdir(ndir)
+    ncwd = getcwd()
+    ncf = listdir(ncwd)
+    chdir("..")
+    return len(ncf) != 0
+
 noecho()
 s.keypad(1)
 
@@ -348,7 +355,7 @@ while True:
     elif right == KEY_RIGHT and key == right or str(right).isalpha() and key == ord(right):
         end = False
         scrolled == False
-        if os.path.isdir(cfiles[cfile]) or scrolled == True and os.path.isdir(new[cfile]):
+        if os.path.isdir(cfiles[cfile]) and notempty(cfiles[cfile]) or scrolled == True and os.path.isdir(new[cfile]) and notempty(new[cfile]):
             sclear()
             s.refresh()
             if scrolled == False:
@@ -481,12 +488,12 @@ while True:
                 else:
                     break
             
-            if cfile != 0:
-                cfile -= 1
-                cy -= 1 
-                s.move(cy, 1)
-            else:
-                s.move(cy, 1)
+            s.move(3, 1)
+
+            cy = 3
+            cfile = 0
+            s.move(3, 1)
+
             if os.path.isdir(cfiles[cfile]):
                 s.addstr(cfiles[cfile], color_pair(dir_color) + sel_fmt)
                 s.move(cy,cx)
@@ -502,6 +509,7 @@ while True:
             sclear()
             cwd = getcwd()
             cfiles.clear()
+            new.clear()
             cfiles = listdir(cwd)
             
             sc2 -= 1
@@ -532,12 +540,13 @@ while True:
                 else:
                     break
             
-            if cy != 1:
-                cfile -= 1
-                cy -= 1 
+            gcwd()
+
+            if cy == my-2:
+                cy=my-2
                 s.move(cy, 1)
             else:
-                cfile -= 1
+                #cy -= 1
                 s.move(cy, 1)
             if os.path.isdir(new[cfile]):
                 s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
