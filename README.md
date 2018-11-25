@@ -1,2 +1,2 @@
-# pluto
-[WIP] A terminal based file manager, written in python3 curses
+<center># pluto</center>
+A simple, rice-able, and compact file manager
