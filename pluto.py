@@ -30,9 +30,9 @@ if os.path.isfile(".plutorc"):
         for line in config:
             if line[0] == "#" or line.isspace() or len(line) == 0:
                 continue
-            elif ":" in list(line) and "#" not in list(line):
-                cvar = line.split(":")[0]
-                cval = line.split(":")[1]
+            elif "=" in list(line) and "#" not in list(line):
+                cvar = line.split("=")[0]
+                cval = line.split("=")[1]
                 if cvar == "file":
                     file_color = int(cval)
                 elif cvar == "dir":
@@ -59,9 +59,9 @@ if os.path.isfile(".plutorc"):
                             for line in theme:
                                 if line[0] == "#" or line.isspace() or len(line) == 0:
                                     continue
-                                elif ":" in list(line) and "#" not in list(line):
-                                    cvar = line.split(":")[0]
-                                    cval = line.split(":")[1]
+                                elif "=" in list(line) and "#" not in list(line):
+                                    cvar = line.split("=")[0]
+                                    cval = line.split("=")[1]
                                     if cvar == "file":
                                         file_color = int(cval)
                                     elif cvar == "dir":
@@ -103,12 +103,24 @@ def gcwd():
         gcwd = cwd
     s.addstr(gcwd)
 
+def sclear():
+    s.move(cy, cx)
+    for iy in range(0, my):
+        s.move(0, iy)
+        for ix in range(0, mx):
+            s.addstr(" ")
+            s.move(iy , ix)
+
 noecho()
 s.keypad(1)
 
-count=2
+cv=0
+bottom=my-2
+top=1
 
-sc1 = my-2
+count=cv
+
+sc1 = bottom
 sc2 = 0
 
 while index < len(cfiles):
@@ -119,7 +131,7 @@ while index < len(cfiles):
         index += 1
 
 for files in cfiles:
-    if count != my-2:
+    if count != bottom:
         count += 1
         s.move(count, 1)
         if os.path.isdir(files):
@@ -130,17 +142,17 @@ for files in cfiles:
     else:
         break
 
-s.move(3,1)
+s.move(top,1)
 
 if os.path.isdir(cfiles[0]):
     s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
-    s.move(3,1)
+    s.move(top,1)
 else:
     s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
-    s.move(3,1)
+    s.move(top,1)
 
 cfile = 0
-cy, cx = 3, 1
+cy, cx = top, 1
 
 while True:
     key = s.getch()
@@ -148,7 +160,7 @@ while True:
         endwin()
         exit()
     elif key == KEY_DOWN:
-        if cfile != len(cfiles)-1 and cy != my-2 and scrolled == False:
+        if cfile != len(cfiles)-1 and cy != bottom and scrolled == False:
             if os.path.isdir(cfiles[cfile]):
                 s.addstr(cfiles[cfile], color_pair(dir_color))
                 s.move(cy,1)
@@ -166,28 +178,18 @@ while True:
                 s.addstr(cfiles[cfile], color_pair(file_color) + sel_fmt)
                 s.move(cy,1)
         else:
-            if cfile == len(cfiles)-1 or new[-1:] == cfiles[-1:] and cy == my-2:
+            if cfile == len(cfiles)-1 or new[-1:] == cfiles[-1:] and cy == bottom:
                 continue
-                """
-                endwin()
-                print(cfile != len(cfiles)-1 and cy != my-2 and scrolled == False)
-                print(new[-1:] == cfiles[-1:]) #and cy == my-2)
-                print(new[-1:])
-                print(cfiles[-1:])
-                print(cy == my-2)
-                print(cy != my-2 and scrolled == True)
-                exit()
-                """
-            elif cy == my-2:
+            elif cy == bottom:
                 scrolled = True
-                s.clear()
+                sclear()
                 sc2 += 1
                 sc1 += 1
                 new = cfiles[sc2:sc1]
-                s.move(3,1)
-                count=2
+                s.move(top,1)
+                count=cv
                 for files in new:
-                    if count != my-2:
+                    if count != bottom:
                         count += 1
                         s.move(count, 1)
                         if os.path.isdir(files):
@@ -204,7 +206,7 @@ while True:
                 else:
                     s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
                     s.move(cy,cx)
-            elif cy != my-2 and scrolled == True:
+            elif cy != bottom and scrolled == True:
                 if os.path.isdir(new[cfile]):
                     s.addstr(new[cfile], color_pair(dir_color))
                     s.move(cy,1)
@@ -221,15 +223,9 @@ while True:
                 else:
                     s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
                     s.move(cy,1)
-            else:
-                endwin()
-                print(cfile != len(cfiles)-1 and cy != my-2 and scrolled == False)
-                print(cfile == len(cfiles)-1 or new[-1:] == cfiles[-1:] and cy == my-2)
-                print(cy == my-2)
-                print(cy != my-2 and scrolled == True)
                 
     elif key == KEY_UP:
-            if cfile != 0 and cy != 3 and scrolled == False:
+            if cfile != 0 and cy != top and scrolled == False:
                 if os.path.isdir(cfiles[cfile]):
                     s.addstr(cfiles[cfile], color_pair(dir_color))
                     s.move(cy,cx)
@@ -250,7 +246,7 @@ while True:
                 if scrolled == False:
                     continue
                 elif scrolled == True:
-                    if cy != 3:
+                    if cy != top:
                         if os.path.isdir(new[cfile]):
                             s.addstr(new[cfile], color_pair(dir_color))
                             s.move(cy,cx)
@@ -267,15 +263,15 @@ while True:
                         else:
                             s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
                             s.move(cy,cx)
-                    elif cy == 3 and cfiles[0] != new[0]:
-                        s.clear()
+                    elif cy == top and cfiles[0] != new[0]:
+                        sclear()
                         sc2 -= 1
                         sc1 -= 1
                         new = cfiles[sc2:sc1]
-                        s.move(3,1)
-                        count=2
+                        s.move(top,1)
+                        count=cv
                         for files in new:
-                            if count != my-2:
+                            if count != bottom:
                                 count += 1
                                 s.move(count, 1)
                                 if os.path.isdir(files):
@@ -286,7 +282,7 @@ while True:
                             else:
                                 break
 
-                        s.move(3,1)
+                        s.move(top,1)
                         cfile=0
 
                         if os.path.isdir(new[cfile]):
@@ -300,7 +296,7 @@ while True:
 
     elif key == KEY_RIGHT:
         if os.path.isdir(cfiles[cfile]) or scrolled == True and os.path.isdir(new[cfile]):
-            s.clear()
+            sclear()
             s.refresh()
             if scrolled == False:
                 chdir(cfiles[cfile])
@@ -311,10 +307,10 @@ while True:
             cfiles.clear()
             cfiles = listdir(cwd)
             cfile = 0
-            cy, cx = 3, 1
-            s.move(3,1)
+            cy, cx = top, 1
+            s.move(top,1)
 
-            count=2
+            count=cv
 
             index=0
 
@@ -326,7 +322,7 @@ while True:
                     index += 1
 
             for files in cfiles:
-                if count != my-2:
+                if count != bottom:
                     count += 1
                     s.move(count, 1)
                     if os.path.isdir(files):
@@ -336,21 +332,21 @@ while True:
                     s.move(count,1)
                 else:
                     break
-            s.move(3,1)
+            s.move(top,1)
 
             if os.path.isdir(cfiles[0]):
                 s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
-                s.move(3,1)
+                s.move(top,1)
             else:
                 s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
-                s.move(3,1)
+                s.move(top,1)
         else:
             continue
     elif key == KEY_LEFT:
         scrolled = False
-        sc1 = my-2
+        sc1 = bottom
         sc2 = 0
-        s.clear()
+        sclear()
         s.refresh()
         chdir("..")
         cwd = getcwd()
@@ -358,10 +354,10 @@ while True:
         new.clear()
         cfiles = listdir(cwd)
         cfile = 0
-        cy, cx = 3, 1
-        s.move(3,1)
+        cy, cx = top, 1
+        s.move(top,1)
 
-        count=2
+        count=cv
 
         index=0
 
@@ -373,7 +369,7 @@ while True:
                 index += 1
 
         for files in cfiles:
-            if count != my-2:
+            if count != bottom:
                 count += 1
                 s.move(count, 1)
                 if os.path.isdir(files):
@@ -384,18 +380,18 @@ while True:
             else:
                 break
             
-        s.move(3,1)            
+        s.move(top,1)            
 
         if os.path.isdir(cfiles[0]):
             s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
-            s.move(3,1)
+            s.move(top,1)
         else:
             s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
-            s.move(3,1)
+            s.move(top,1)
     elif key == ord(del_key):
         if scrolled == False:
             system("rm -rf " + cfiles[cfile])
-            s.clear()
+            sclear()
             cwd = getcwd()
             cfiles.clear()
             cfiles = listdir(cwd)
@@ -409,10 +405,10 @@ while True:
                 else:
                     index += 1
 
-            count=2
+            count=cv
 
             for files in cfiles:
-                if count != my-2:
+                if count != bottom:
                     count += 1
                     s.move(count, 1)
                     if os.path.isdir(files):
@@ -437,7 +433,7 @@ while True:
                 s.move(cy,cx)
         else:
             system("rm -rf " + new[cfile])
-            s.clear()
+            sclear()
             cwd = getcwd()
             cfiles.clear()
             cfiles = listdir(cwd)
@@ -451,12 +447,12 @@ while True:
                 else:
                     index += 1
 
-            count=2
+            count=cv
             
             new = cfiles[sc2:sc1]
 
             for files in new:
-                if count != my-2:
+                if count != bottom:
                     count += 1
                     s.move(count, 1)
                     if os.path.isdir(files):
@@ -483,17 +479,17 @@ while True:
 
     elif key == ord(home_key):
         scrolled = False
-        s.clear()
+        sclear()
         s.refresh()
         chdir(home)
         cwd = getcwd()
         cfiles.clear()
         cfiles = listdir(cwd)
         cfile = 0
-        cy, cx = 3, 1
-        s.move(3,1)            
+        cy, cx = top, 1
+        s.move(top,1)            
 
-        count=2
+        count=cv
 
         index=0
 
@@ -505,7 +501,7 @@ while True:
                 index += 1
 
         for files in cfiles:
-            if count != my-2:
+            if count != bottom:
                 count += 1
                 s.move(count, 1)
                 if os.path.isdir(files):
@@ -516,14 +512,14 @@ while True:
             else:
                 break
             
-        s.move(3,1)            
+        s.move(top,1)            
 
         if os.path.isdir(cfiles[0]):
             s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
-            s.move(3,1)
+            s.move(top,1)
         else:
             s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
-            s.move(3,1)
+            s.move(top,1)
 
     elif key == ord(rename_key):
         continue
