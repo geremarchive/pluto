@@ -26,6 +26,10 @@ exit_key="q"
 del_key="d"
 home_key="h"
 rename_key="r"
+up=KEY_UP
+down=KEY_DOWN
+left=KEY_LEFT
+right=KEY_RIGHT
 
 if os.path.isfile(".plutorc"):
     with io.open(".plutorc", "r") as config:
@@ -41,6 +45,26 @@ if os.path.isfile(".plutorc"):
                     del_key = str(cval.rstrip())
                 elif cvar == "home":
                     home_key = str(cval.rstrip())
+                elif cvar == "up":
+                    if str(cval.rstrip()) == "up":
+                        up=KEY_UP
+                    else:
+                        up=str(cval.rstrip())
+                elif cvar == "down":
+                    if str(cval.rstrip()) == "down":
+                        down=KEY_DOWN
+                    else:
+                        down=str(cval.rstrip())
+                elif cvar == "left":
+                    if str(cval.rstrip()) == "left":
+                        left=KEY_LEFT
+                    else:
+                        left=str(cval.rstrip())
+                elif cvar == "right":
+                    if str(cval.rstrip()) == "right":
+                        right=KEY_RIGHT
+                    else:
+                        right=str(cval.rstrip())
                 elif cvar == "theme":
                     if os.path.isdir(home + "/.pluto/themes"):
                         chdir(home + "/.pluto/themes")
@@ -165,7 +189,7 @@ while True:
     if key == ord(exit_key):
         endwin()
         exit()
-    elif key == KEY_DOWN:
+    elif key == down == KEY_DOWN and key == down or str(down).isalpha() and key == ord(down):
         if cfile != len(cfiles)-1 and cy != bottom and scrolled == False:
             if os.path.isdir(cfiles[cfile]):
                 s.addstr(cfiles[cfile], color_pair(dir_color))
@@ -247,7 +271,7 @@ while True:
                 s.move(cy, 1)
                 
                 
-    elif key == KEY_UP:
+    elif up == KEY_UP and key == up or str(up).isalpha() and key == ord(up):
             if cfile != 0 and cy != top and scrolled == False:
                 if os.path.isdir(cfiles[cfile]):
                     s.addstr(cfiles[cfile], color_pair(dir_color))
@@ -321,7 +345,7 @@ while True:
                     else:
                         continue
 
-    elif key == KEY_RIGHT:
+    elif right == KEY_RIGHT and key == right or str(right).isalpha() and key == ord(right):
         end = False
         scrolled == False
         if os.path.isdir(cfiles[cfile]) or scrolled == True and os.path.isdir(new[cfile]):
@@ -375,7 +399,7 @@ while True:
 
         else:
             continue
-    elif key == KEY_LEFT:
+    elif left == KEY_LEFT and key == left or str(left).isalpha() and key == ord(left):
         scrolled = False
         end = False
         sc1 = bottom
