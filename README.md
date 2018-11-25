@@ -1,4 +1,4 @@
-<h1 align="center"><style font-size: 150%><i>Pluto</i></style></h1>
+<h1 align="center"><i>Pluto</i></h1>
  
 <p align="center">A simple, rice-able, and compact file manager.</center>
 
