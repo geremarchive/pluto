@@ -19,7 +19,9 @@ comment = False
 
 file_color=0
 dir_color=13
+cwd_color=0
 sel_fmt=A_REVERSE
+cwd_fmt=A_BOLD
 exit_key="q"
 del_key="d"
 home_key="h"
@@ -33,20 +35,7 @@ if os.path.isfile(".plutorc"):
             elif "=" in list(line) and "#" not in list(line):
                 cvar = line.split("=")[0]
                 cval = line.split("=")[1]
-                if cvar == "file":
-                    file_color = int(cval)
-                elif cvar == "dir":
-                    dir_color = int(cval)
-                elif cvar == "sel":
-                    if cval.rstrip() == "bold":
-                        sel_fmt=A_BOLD
-                    elif cval.rstrip() == "rev":
-                        sel_fmt=A_REVERSE
-                    elif cval.rstrip() == "underline":
-                        sel_fmt=A_UNDERLINE
-                    elif cval.rstrip() == "dim":
-                        sel_fmt=A_DIM
-                elif cvar == "exit":
+                if cvar == "exit":
                     exit_key = str(cval.rstrip())
                 elif cvar == "del":
                     del_key = str(cval.rstrip())
@@ -66,6 +55,17 @@ if os.path.isfile(".plutorc"):
                                         file_color = int(cval)
                                     elif cvar == "dir":
                                         dir_color = int(cval)
+                                    elif cvar == "cwd-color":
+                                        cwd_color = int(cval)
+                                    elif cvar == "cwd-format":
+                                        if str(cval.rstrip()) == "rev":
+                                            cwd_fmt = A_REVERSE
+                                        elif str(cval.rstrip()) == "bold":
+                                            cwd_fmt = A_BOLD
+                                        elif str(cval.rstrip()) == "underline":
+                                            cwd_fmt = A_UNDERLINE
+                                        elif str(cval.rstrip()) == "dim":
+                                            cwd_fmt = A_DIM
                 elif cvar == "rename":
                     rename_key = str(cval.rstrip())
             else:
@@ -80,6 +80,8 @@ chdir(cwd)
 new=[]
 
 scrolled = False
+
+end=False
 
 start_color()
 
@@ -101,7 +103,7 @@ def gcwd():
         gcwd = str1 = ''.join(gcwd)
     else:
         gcwd = cwd
-    s.addstr(gcwd)
+    s.addstr(gcwd, color_pair(cwd_color) + cwd_fmt)
 
 def sclear():
     s.move(cy, cx)
@@ -114,9 +116,9 @@ def sclear():
 noecho()
 s.keypad(1)
 
-cv=0
+cv=2
 bottom=my-2
-top=1
+top=3
 
 count=cv
 
@@ -154,6 +156,10 @@ else:
 cfile = 0
 cy, cx = top, 1
 
+gcwd()
+
+s.move(3, 1)
+
 while True:
     key = s.getch()
     if key == ord(exit_key):
@@ -178,9 +184,18 @@ while True:
                 s.addstr(cfiles[cfile], color_pair(file_color) + sel_fmt)
                 s.move(cy,1)
         else:
-            if cfile == len(cfiles)-1 or new[-1:] == cfiles[-1:] and cy == bottom:
+            if cfile == len(new)-1 or new[-top:] == cfiles[-1:] and cy == bottom:
+                end=True
                 continue
-            elif cy == bottom:
+                """
+                endwin()
+                print(cfile == len(cfiles)-1)
+                print(new[-top:] == cfiles[-1:])
+                print(new[-top:])
+                print(cfiles[-1:])
+                exit()
+                """
+            elif cy == bottom and end == False:
                 scrolled = True
                 sclear()
                 sc2 += 1
@@ -206,6 +221,10 @@ while True:
                 else:
                     s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
                     s.move(cy,cx)
+
+                gcwd()
+                s.move(my-2, 1)
+
             elif cy != bottom and scrolled == True:
                 if os.path.isdir(new[cfile]):
                     s.addstr(new[cfile], color_pair(dir_color))
@@ -223,6 +242,10 @@ while True:
                 else:
                     s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
                     s.move(cy,1)
+
+                gcwd()
+                s.move(cy, 1)
+                
                 
     elif key == KEY_UP:
             if cfile != 0 and cy != top and scrolled == False:
@@ -291,10 +314,16 @@ while True:
                         else:
                             s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
                             s.move(cy,cx)
+
+                        gcwd()
+                        s.move(cy, 1)
+
                     else:
                         continue
 
     elif key == KEY_RIGHT:
+        end = False
+        scrolled == False
         if os.path.isdir(cfiles[cfile]) or scrolled == True and os.path.isdir(new[cfile]):
             sclear()
             s.refresh()
@@ -305,6 +334,7 @@ while True:
             scrolled = False
             cwd = getcwd()
             cfiles.clear()
+            new.clear()
             cfiles = listdir(cwd)
             cfile = 0
             cy, cx = top, 1
@@ -340,10 +370,14 @@ while True:
             else:
                 s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
                 s.move(top,1)
+            gcwd()
+            s.move(3, 1)            
+
         else:
             continue
     elif key == KEY_LEFT:
         scrolled = False
+        end = False
         sc1 = bottom
         sc2 = 0
         sclear()
@@ -388,6 +422,10 @@ while True:
         else:
             s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
             s.move(top,1)
+        
+        gcwd()
+        s.move(3, 1)        
+
     elif key == ord(del_key):
         if scrolled == False:
             system("rm -rf " + cfiles[cfile])
@@ -431,13 +469,20 @@ while True:
             else:
                 s.addstr(cfiles[cfile], color_pair(file_color) + sel_fmt)
                 s.move(cy,cx)
-        else:
+
+            gcwd()
+            s.move(3, 1)
+
+        elif scrolled == True:
             system("rm -rf " + new[cfile])
             sclear()
             cwd = getcwd()
             cfiles.clear()
             cfiles = listdir(cwd)
             
+            sc2 -= 1
+            sc1 -= 1
+
             index=0
     
             while index < len(cfiles):
@@ -520,6 +565,9 @@ while True:
         else:
             s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
             s.move(top,1)
+
+        gcwd()
+        s.move(3, 1)
 
     elif key == ord(rename_key):
         continue
