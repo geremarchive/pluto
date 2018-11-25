@@ -4,4 +4,4 @@
 
 [![asciicast](https://asciinema.org/a/213618.svg)](https://asciinema.org/a/213618)
 
-<p align="center">Pluto running with the <b>oxide></b> theme and my configs</p>
+<p align="center">Pluto running with the <b>oxide</b> theme and my configs</p>
