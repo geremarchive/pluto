@@ -31,6 +31,9 @@ down=KEY_DOWN
 left=KEY_LEFT
 right=KEY_RIGHT
 
+macros = {}
+mackeys = []
+
 if os.path.isfile(".plutorc"):
     with io.open(".plutorc", "r") as config:
         for line in config:
@@ -65,6 +68,10 @@ if os.path.isfile(".plutorc"):
                         right=KEY_RIGHT
                     else:
                         right=str(cval.rstrip())
+                elif line[0:5] == "macro":
+                    mdir = line.split(":")[1].split("=")[0]
+                    mkey = line.split(":")[1].split("=")[1]
+                    macros.update({mkey.rstrip(): mdir})
                 elif cvar == "theme":
                     if os.path.isdir(home + "/.pluto/themes"):
                         chdir(home + "/.pluto/themes")
@@ -144,6 +151,12 @@ def notempty(ndir):
     chdir("..")
     return len(ncf) != 0
 
+def getkeys():
+    for key in macros:
+        mackeys.append(key.rstrip())
+
+getkeys()
+
 noecho()
 s.keypad(1)
 
@@ -195,6 +208,7 @@ while True:
     key = s.getch()
     if key == ord(exit_key):
         endwin()
+        print(macros)
         exit()
     elif key == down == KEY_DOWN and key == down or str(down).isalpha() and key == ord(down):
         if cfile != len(cfiles)-1 and cy != bottom and scrolled == False:
@@ -218,14 +232,6 @@ while True:
             if cfile == len(new)-1 or new[-top:] == cfiles[-1:] and cy == bottom:
                 end=True
                 continue
-                """
-                endwin()
-                print(cfile == len(cfiles)-1)
-                print(new[-top:] == cfiles[-1:])
-                print(new[-top:])
-                print(cfiles[-1:])
-                exit()
-                """
             elif cy == bottom and end == False:
                 scrolled = True
                 sclear()
@@ -604,6 +610,56 @@ while True:
 
     elif key == ord(rename_key):
         continue
+    elif chr(key) in mackeys:
+        scrolled = False
+        end = False
+        sc1 = bottom
+        sc2 = 0
+        sclear()
+        s.refresh()
+        chdir(macros.get(str(chr(key))))
+        cwd = getcwd()
+        cfiles.clear()
+        new.clear()
+        cfiles = listdir(cwd)
+        cfile = 0
+        cy, cx = top, 1
+        s.move(top,1)
+
+        count=cv
+
+        index=0
+
+        while index < len(cfiles):
+            files = cfiles[index]
+            if files[0] == ".":
+                cfiles.pop(cfiles.index(files))
+            else:
+                index += 1
+
+        for files in cfiles:
+            if count != bottom:
+                count += 1
+                s.move(count, 1)
+                if os.path.isdir(files):
+                    s.addstr(files, color_pair(dir_color))
+                else:
+                    s.addstr(files, color_pair(file_color))
+                s.move(count,1)
+            else:
+                break
+            
+        s.move(top,1)            
+
+        if os.path.isdir(cfiles[0]):
+            s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
+            s.move(top,1)
+        else:
+            s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
+            s.move(top,1)
+        
+        gcwd()
+        s.move(3, 1) 
     else:
         continue
 endwin()
