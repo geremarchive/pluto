@@ -105,3 +105,10 @@ dir [0-256] - Changes the color directories
 cwd-color [0-256] - Changes the color of the cwd
 .IP \(bu
 cwd-format [bold, rev, dim, underline]
+.CH
+Macros
+.RC
+.PP
+Macros allow the user to move to any directory with a simple keypress.
+Macros a formated like
+.B macro:/path/to/dir=key
