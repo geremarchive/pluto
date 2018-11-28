@@ -77,7 +77,9 @@ exit [any character] - Changes the key for exiting
 .IP \(bu
 del [any character] - Changes the key for deleteing a file
 .IP \(bu
-home [any character] - Changes the key for moving to ~
+show-hidden [true, false] - Show dotfiles by default
+.IP \(bu
+toggle-hidden [any character] - Show/hide dotfiles
 .IP \(bu
 up [up, any character] - Changes the key for the up function
 .IP \(bu
