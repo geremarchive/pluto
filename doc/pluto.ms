@@ -49,29 +49,28 @@ The pluto.tar.gz file not only contains the pluto executable, but a
 script aswell. This script acts as an installer for pluto. The script will give the user
 a choice between a "default" installation that will move pluto to your path and 
 generate a standard
-.B ~/.plutorc
+.B ~/.config/pluto/config
 file and a standard
-.B ~/.pluto/themes
-folder with the all default themes. You can also choose an "minimal" install option
-that lets the user choose what
-.B ~/.plutorc
-options you want aswell as what themes to install in
-.B ~/.pluto/themes .
+.B ~/.config/pluto/themes
+folder with the all default themes. You can also choose an "minimal" install option that creates and empty
+.B ~/.config/pluto/config
+and an empty
+.B ~/.config/pluto/themes .
 .CH
 Configuration
 .RC
 .CT
-~/.plutorc
+~/.config/pluto/config
 .RC
 .PP
-As mentioned before, pluto comes with a rc file in the home directory. This rc file
+As mentioned before, pluto comes with a config file in the home directory. This config file
 contains different variables that corespond to different aspects of pluto that can be
 configured with the following arguments.
 .RC
 .IP \(bu
 sel [bold, rev, dim, underline] - Changes how items are selected
 .IP \(bu
-theme [Any .plut file in ~/.pluto/themes] - Changes the theme
+theme [Any .plut file in ~/.config/pluto/themes] - Changes the theme
 .IP \(bu
 exit [any character] - Changes the key for exiting
 .IP \(bu
@@ -89,7 +88,7 @@ left [left, any character] - Changes the key for the left function
 .IP \(bu
 right [right, any character] - Changes the key for the right function
 .CT
-~/.pluto/themes
+~/.config/pluto/themes
 .RC
 .PP
 All color configuration takes place in 
