@@ -35,8 +35,9 @@ right=KEY_RIGHT
 macros = {}
 mackeys = []
 
-if os.path.isfile(".plutorc"):
-    with io.open(".plutorc", "r") as config:
+if os.path.isfile(".config/pluto/config"):
+    chdir(".config/pluto")
+    with io.open("config", "r") as config:
         for line in config:
             if line[0] == "#" or line.isspace() or len(line) == 0:
                 continue
@@ -79,8 +80,8 @@ if os.path.isfile(".plutorc"):
                     mkey = line.split(":")[1].split("=")[1]
                     macros.update({mkey.rstrip(): mdir})
                 elif cvar == "theme":
-                    if os.path.isdir(home + "/.pluto/themes"):
-                        chdir(home + "/.pluto/themes")
+                    if os.path.isdir("themes"):
+                        chdir("themes")
                         with io.open(cval.rstrip() + ".plut", "r") as theme:
                             for line in theme:
                                 if line[0] == "#" or line.isspace() or len(line) == 0:
@@ -492,12 +493,15 @@ while True:
                     s.move(count,1)
                 else:
                     break
-            
-            s.move(3, 1)
-
-            cy = 3
-            cfile = 0
-            s.move(3, 1)
+            if cy == 3:
+                s.move(3, 1)
+                cy = 3
+                cfile = 0
+                s.move(3, 1)
+            else:
+                cfile -= 1
+                cy -= 1 
+                s.move(cy, 1)
 
             if os.path.isdir(cfiles[cfile]):
                 s.addstr(cfiles[cfile], color_pair(dir_color) + sel_fmt)
