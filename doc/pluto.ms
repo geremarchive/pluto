@@ -87,6 +87,8 @@ down [down, any character] - Changes the key for the down function
 left [left, any character] - Changes the key for the left function
 .IP \(bu
 right [right, any character] - Changes the key for the right function
+.IP \(bu
+move [any character] - Changes the key for the move function
 .CT
 ~/.config/pluto/themes
 .RC
@@ -108,6 +110,9 @@ cwd-color [0-256] - Changes the color of the cwd
 cwd-format [bold, rev, dim, underline]
 .CH
 Macros
+.RC
+.CT
+Directory Macros
 .RC
 .PP
 Macros allow the user to move to any directory with a simple keypress.
