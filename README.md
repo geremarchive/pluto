@@ -24,6 +24,6 @@ Type:
 ```
 to run the setup script and choose between a minmal and normal install
 
-That's it! to run pluto type ```pluto```
+That's it! To run pluto type ```pluto```
 
 To learn more about configuring pluto, read the pdf in ```doc/```
