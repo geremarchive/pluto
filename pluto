@@ -2,6 +2,7 @@
 
 from curses import *
 from os import *
+from shutil import *
 from sys import *
 import os.path
 import io
@@ -25,6 +26,7 @@ cwd_fmt=A_BOLD
 exit_key="q"
 del_key="d"
 rename_key="x"
+move_key="m"
 shidden=False
 thidden="."
 up=KEY_UP
@@ -34,6 +36,8 @@ right=KEY_RIGHT
 
 macros = {}
 mackeys = []
+
+dirs = []
 
 if os.path.isfile(".config/pluto/config"):
     chdir(".config/pluto")
@@ -48,6 +52,17 @@ if os.path.isfile(".config/pluto/config"):
                     exit_key = str(cval.rstrip())
                 elif cvar == "del":
                     del_key = str(cval.rstrip())
+                elif cvar == "move":
+                    move_key = str(cval.rstrip())
+                elif cvar == "sel":
+                    if cval.rstrip() == "dim":
+                        sel_fmt=A_DIM
+                    elif cval.rstrip() == "rev":
+                        sel_fmt=A_REVERSE
+                    elif cval.rstrip() == "bold":
+                        sel_fmt=A_BOLD
+                    elif cval.rstrip() == "underline":
+                        sel_fmt=A_UNDERLINE
                 elif cvar == "show-hidden":
                     if cval.rstrip() == "true":
                         shidden=True
@@ -55,6 +70,8 @@ if os.path.isfile(".config/pluto/config"):
                         shidden=False
                 elif cvar == "toggle-hidden":
                     thidden == str(cval.rstrip())
+                elif cvar == "move":
+                    move_key == str(cval.rstrip())
                 elif cvar == "up":
                     if str(cval.rstrip()) == "up":
                         up=KEY_UP
@@ -120,6 +137,7 @@ chdir(cwd)
 cv=2
 bottom=my-2
 top=3
+off=1
 
 cfile = 0
 cy, cx = top, 1
@@ -141,19 +159,27 @@ use_default_colors()
 
 curs_set(0)
 
+moving = False
+
+move_file=""
+
 for i in range(0, 256):
     init_pair(i + 1, i, -1)
 
 def gcwd():
-    #cwd = getcwd()
-    s.move(1,1)
+    s.move(1,off)
     if home in cwd:
         gcwd = cwd.split(home)
         gcwd[0] = "~"
         gcwd = str1 = ''.join(gcwd)
     else:
         gcwd = cwd
-    s.addstr(gcwd, color_pair(cwd_color) + cwd_fmt)
+    if moving == False:
+        s.addstr(str(gcwd), color_pair(cwd_color) + cwd_fmt)
+        s.move(1,len(gcwd)+off)
+        s.addstr("       ")
+    else:
+        s.addstr(str(gcwd) + " - move", color_pair(cwd_color) + cwd_fmt)
 
 def sclear():
     s.move(cy, cx)
@@ -175,6 +201,8 @@ def getkeys():
         mackeys.append(key.rstrip())
 
 def dots():
+    global cfiles, dirs
+    dirs.clear()
     if shidden == False:
         index = 0
         while index < len(cfiles):
@@ -183,10 +211,86 @@ def dots():
                 cfiles.pop(cfiles.index(files))
             else:
                 index += 1
+        index=0
+        while index < len(cfiles):
+            files = cfiles[index]
+            if os.path.isdir(files):
+                cfiles.pop(cfiles.index(files))
+                dirs.append(files)
+            else:
+                index += 1
+        dirs = sorted(dirs, key=lambda s: s.lower())
+        nc = sorted(cfiles, key=lambda s: s.lower())
+        cfiles.clear()
+        cfiles = dirs + nc
     else:
+        index=0
+        while index < len(cfiles):
+            files = cfiles[index]
+            if os.path.isdir(files):
+                cfiles.pop(cfiles.index(files))
+                dirs.append(files)
+            else:
+                index += 1
+        dirs = sorted(dirs, key=lambda s: s.lower())
+        nc = sorted(cfiles, key=lambda s: s.lower())
+        cfiles.clear()
+        cfiles = dirs + nc       
         pass
 
-#def
+def disp_c():
+    global count, cfiles, files
+    count = top-1
+    for files in cfiles:
+        if count != bottom:
+            count += 1
+            s.move(count, off)
+            if os.path.isdir(files):
+                s.addstr(files, color_pair(dir_color))
+            else:
+                s.addstr(files, color_pair(file_color))
+            s.move(count,off)
+        else:
+            break
+
+def disp_n():
+    global count, cfiles, files
+    count = cv
+    for files in new:
+        if count != bottom:
+            count += 1
+            s.move(count, off)
+            if os.path.isdir(files):
+                s.addstr(files, color_pair(dir_color))
+            else:
+                s.addstr(files, color_pair(file_color))
+            s.move(count,off)
+        else:
+            break
+
+def sel(numb, dt):
+    if dt == "c":
+        dt = cfiles
+    elif dt == "n":
+        dt = new
+    if os.path.isdir(dt[numb]):
+        s.addstr(dt[numb], color_pair(dir_color) + sel_fmt)
+        s.move(cy,off)
+    else:
+        s.addstr(dt[numb], color_pair(file_color) + sel_fmt)
+        s.move(cy,off)
+
+def dsel(numb, dt):
+    if dt == "c":
+        dt = cfiles
+    elif dt == "n":
+        dt = new
+    if os.path.isdir(dt[numb]):
+        s.addstr(dt[numb], color_pair(dir_color))
+        s.move(cy,off)
+    else:
+        s.addstr(dt[numb], color_pair(file_color))
+        s.move(cy,off)
 
 getkeys()
 
@@ -195,30 +299,17 @@ s.keypad(1)
 
 dots()
 
-for files in cfiles:
-    if count != bottom:
-        count += 1
-        s.move(count, 1)
-        if os.path.isdir(files):
-            s.addstr(files, color_pair(dir_color))
-        else:
-            s.addstr(files, color_pair(file_color))
-        s.move(count,1)
-    else:
-        break
+s.move(top, off)
 
-s.move(top,1)
+disp_c()
 
-if os.path.isdir(cfiles[0]):
-    s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
-    s.move(top,1)
-else:
-    s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
-    s.move(top,1)
+s.move(top,off)
+
+sel(0, "c")
 
 gcwd()
 
-s.move(3, 1)
+s.move(top, off)
 
 while True:
     key = s.getch()
@@ -227,22 +318,12 @@ while True:
         exit()
     elif key == down == KEY_DOWN and key == down or str(down).isalpha() and key == ord(down):
         if cfile != len(cfiles)-1 and cy != bottom and scrolled == False:
-            if os.path.isdir(cfiles[cfile]):
-                s.addstr(cfiles[cfile], color_pair(dir_color))
-                s.move(cy,1)
-            else:
-                s.addstr(cfiles[cfile], color_pair(file_color))
-                s.move(cy,1)
+            dsel(cfile, "c")
 
             cfile += 1
             cy += 1 
-            s.move(cy, 1)
-            if os.path.isdir(cfiles[cfile]):
-                s.addstr(cfiles[cfile], color_pair(dir_color) + sel_fmt)
-                s.move(cy,1)
-            else:
-                s.addstr(cfiles[cfile], color_pair(file_color) + sel_fmt)
-                s.move(cy,1)
+            s.move(cy, off)
+            sel(cfile, "c")
         else:
             if cfile == len(new)-1 or new[-top:] == cfiles[-1:] and cy == bottom:
                 end=True
@@ -253,122 +334,60 @@ while True:
                 sc2 += 1
                 sc1 += 1
                 new = cfiles[sc2:sc1]
-                s.move(top,1)
+                s.move(top,off)
                 count=cv
-                for files in new:
-                    if count != bottom:
-                        count += 1
-                        s.move(count, 1)
-                        if os.path.isdir(files):
-                            s.addstr(files, color_pair(dir_color))
-                            s.move(count,1)
-                        else:
-                            s.addstr(files, color_pair(file_color))
-                            s.move(count,1)
-                    else:
-                        break
-                if os.path.isdir(new[cfile]):
-                    s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
-                    s.move(cy,cx)
-                else:
-                    s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
-                    s.move(cy,cx)
-
+                disp_n()
+                sel(cfile, "n")
                 gcwd()
-                s.move(my-2, 1)
+                s.move(my-2, off)
 
             elif cy != bottom and scrolled == True:
-                if os.path.isdir(new[cfile]):
-                    s.addstr(new[cfile], color_pair(dir_color))
-                    s.move(cy,1)
-                else:
-                    s.addstr(new[cfile], color_pair(file_color))
-                    s.move(cy,1)
+                dsel(cfile, "n")
 
                 cfile += 1
                 cy += 1 
                 s.move(cy, 1)
-                if os.path.isdir(new[cfile]):
-                    s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
-                    s.move(cy,1)
-                else:
-                    s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
-                    s.move(cy,1)
+                sel(cfile, "n")
 
                 gcwd()
-                s.move(cy, 1)
+                s.move(cy, off)
                 
                 
     elif up == KEY_UP and key == up or str(up).isalpha() and key == ord(up):
             if cfile != 0 and cy != top and scrolled == False:
-                if os.path.isdir(cfiles[cfile]):
-                    s.addstr(cfiles[cfile], color_pair(dir_color))
-                    s.move(cy,cx)
-                else:
-                    s.addstr(cfiles[cfile], color_pair(file_color))
-                    s.move(cy,cx)
+                dsel(cfile, "c")
 
                 cfile -= 1
                 cy -= 1 
-                s.move(cy, 1)
-                if os.path.isdir(cfiles[cfile]):
-                    s.addstr(cfiles[cfile], color_pair(dir_color) + sel_fmt)
-                    s.move(cy,cx)
-                else:
-                    s.addstr(cfiles[cfile], color_pair(file_color) + sel_fmt)
-                    s.move(cy,cx)
+                s.move(cy, off)
+                sel(cfile, "c")
             else:
                 if scrolled == False:
                     continue
                 elif scrolled == True:
                     if cy != top:
-                        if os.path.isdir(new[cfile]):
-                            s.addstr(new[cfile], color_pair(dir_color))
-                            s.move(cy,cx)
-                        else:
-                            s.addstr(new[cfile], color_pair(file_color))
-                            s.move(cy,cx)
+                        dsel(cfile, "n")
 
                         cfile -= 1
                         cy -= 1 
-                        s.move(cy, 1)
-                        if os.path.isdir(new[cfile]):
-                            s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
-                            s.move(cy,cx)
-                        else:
-                            s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
-                            s.move(cy,cx)
+                        s.move(cy, off)
+                        sel(cfile, "n")
                     elif cy == top and cfiles[0] != new[0]:
                         sclear()
                         sc2 -= 1
                         sc1 -= 1
                         new = cfiles[sc2:sc1]
-                        s.move(top,1)
-                        count=cv
-                        for files in new:
-                            if count != bottom:
-                                count += 1
-                                s.move(count, 1)
-                                if os.path.isdir(files):
-                                    s.addstr(files, color_pair(dir_color))
-                                else:
-                                    s.addstr(files, color_pair(file_color))
-                                    s.move(count,1)
-                            else:
-                                break
+                        s.move(top,off)
+                        
+                        disp_n()
 
-                        s.move(top,1)
+                        s.move(top,off)
                         cfile=0
 
-                        if os.path.isdir(new[cfile]):
-                            s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
-                            s.move(cy,cx)
-                        else:
-                            s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
-                            s.move(cy,cx)
+                        sel(cfile, "n")
 
                         gcwd()
-                        s.move(cy, 1)
+                        s.move(cy, off)
 
                     else:
                         continue
@@ -389,8 +408,8 @@ while True:
             new.clear()
             cfiles = listdir(cwd)
             cfile = 0
-            cy, cx = top, 1
-            s.move(top,1)
+            cy, cx = top, off
+            s.move(top,off)
 
             count=cv
 
@@ -398,27 +417,12 @@ while True:
 
             dots()
 
-            for files in cfiles:
-                if count != bottom:
-                    count += 1
-                    s.move(count, 1)
-                    if os.path.isdir(files):
-                        s.addstr(files, color_pair(dir_color))
-                    else:
-                        s.addstr(files, color_pair(file_color))
-                    s.move(count,1)
-                else:
-                    break
-            s.move(top,1)
+            disp_c()
+            s.move(top,off)
 
-            if os.path.isdir(cfiles[0]):
-                s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
-                s.move(top,1)
-            else:
-                s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
-                s.move(top,1)
+            sel(0, "c")
             gcwd()
-            s.move(3, 1)            
+            s.move(top, off)            
 
         else:
             continue
@@ -435,8 +439,8 @@ while True:
         new.clear()
         cfiles = listdir(cwd)
         cfile = 0
-        cy, cx = top, 1
-        s.move(top,1)
+        cy, cx = top, off
+        s.move(top,off)
 
         count=cv
 
@@ -444,29 +448,14 @@ while True:
 
         dots()
 
-        for files in cfiles:
-            if count != bottom:
-                count += 1
-                s.move(count, 1)
-                if os.path.isdir(files):
-                    s.addstr(files, color_pair(dir_color))
-                else:
-                    s.addstr(files, color_pair(file_color))
-                s.move(count,1)
-            else:
-                break
+        disp_c()
             
         s.move(top,1)            
 
-        if os.path.isdir(cfiles[0]):
-            s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
-            s.move(top,1)
-        else:
-            s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
-            s.move(top,1)
+        sel(0, "c")
         
         gcwd()
-        s.move(3, 1)        
+        s.move(top, off)        
 
     elif key == ord(del_key):
         if scrolled == False:
@@ -475,43 +464,25 @@ while True:
             cwd = getcwd()
             cfiles.clear()
             cfiles = listdir(cwd)
-            
+
             index=0
     
             dots()
 
-            count=cv
+            disp_c()
 
-            for files in cfiles:
-                if count != bottom:
-                    count += 1
-                    s.move(count, 1)
-                    if os.path.isdir(files):
-                        s.addstr(files, color_pair(dir_color))
-                    else:
-                        s.addstr(files, color_pair(file_color))
-                    s.move(count,1)
-                else:
-                    break
-            if cy == 3:
-                s.move(3, 1)
-                cy = 3
-                cfile = 0
-                s.move(3, 1)
-            else:
+            if cy != top:
+                cy -= 1
                 cfile -= 1
-                cy -= 1 
-                s.move(cy, 1)
-
-            if os.path.isdir(cfiles[cfile]):
-                s.addstr(cfiles[cfile], color_pair(dir_color) + sel_fmt)
-                s.move(cy,cx)
+                s.move(cy, off)
             else:
-                s.addstr(cfiles[cfile], color_pair(file_color) + sel_fmt)
-                s.move(cy,cx)
+                s.move(cy, off)
+                cfile = 0
+
+            sel(cfile, "c")
 
             gcwd()
-            s.move(3, 1)
+            s.move(cy, off)
 
         elif scrolled == True:
             system("rm -rf " + new[cfile])
@@ -532,35 +503,55 @@ while True:
             
             new = cfiles[sc2:sc1]
 
-            for files in new:
-                if count != bottom:
-                    count += 1
-                    s.move(count, 1)
-                    if os.path.isdir(files):
-                        s.addstr(files, color_pair(dir_color))
-                    else:
-                        s.addstr(files, color_pair(file_color))
-                    s.move(count,1)
-                else:
-                    break
+            disp_n()
             
             gcwd()
 
-            if cy == my-2:
-                cy=my-2
-                s.move(cy, 1)
+            if cy == top:
+                cy = top
+                s.move(cy, off)
             else:
-                #cy -= 1
-                s.move(cy, 1)
-            if os.path.isdir(new[cfile]):
-                s.addstr(new[cfile], color_pair(dir_color) + sel_fmt)
-                s.move(cy,cx)
-            else:
-                s.addstr(new[cfile], color_pair(file_color) + sel_fmt)
-                s.move(cy,cx)
+                s.move(cy, off)
+            sel(cfile, "n")
 
-    elif key == ord(rename_key):
-        continue
+    elif key == ord(move_key):
+        if moving == False:
+            
+            move_cwd = cwd
+
+            if scrolled == True:
+                move_file = new[cfile]
+            else:
+                move_file = cfiles[cfile]
+
+            moving = True
+        else:
+            moving = False
+            move(move_cwd + "/" + move_file, cwd + "/" + move_file)
+
+            cwd = getcwd()
+            cfiles.clear()
+            new.clear()
+            new = cfiles
+            cfiles = listdir(cwd)
+            dots()
+
+            sclear()
+            cy = top
+            sc1 = bottom
+            sc2 = 0
+            cfile=0
+            index = 0
+            scrolled = False
+
+            disp_c()
+
+            s.move(cy, off)
+
+            sel(cfile, "c")
+
+        gcwd()
+        s.move(cy, off)
     elif chr(key) in mackeys:
         scrolled = False
         end = False
@@ -574,8 +565,8 @@ while True:
         new.clear()
         cfiles = listdir(cwd)
         cfile = 0
-        cy, cx = top, 1
-        s.move(top,1)
+        cy, cx = top, off
+        s.move(top,off)
 
         count=cv
 
@@ -583,29 +574,14 @@ while True:
 
         dots()
 
-        for files in cfiles:
-            if count != bottom:
-                count += 1
-                s.move(count, 1)
-                if os.path.isdir(files):
-                    s.addstr(files, color_pair(dir_color))
-                else:
-                    s.addstr(files, color_pair(file_color))
-                s.move(count,1)
-            else:
-                break
+        disp_c()
             
-        s.move(top,1)            
+        s.move(top,off)
 
-        if os.path.isdir(cfiles[0]):
-            s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
-            s.move(top,1)
-        else:
-            s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
-            s.move(top,1)
+        sel(0, "c")
         
         gcwd()
-        s.move(3, 1)
+        s.move(top, off)
     elif key == ord(thidden):
         if shidden == True:
             shidden = False
@@ -622,8 +598,8 @@ while True:
         new.clear()
         cfiles = listdir(cwd)
         cfile = 0
-        cy, cx = top, 1
-        s.move(top,1)
+        cy, cx = top, off
+        s.move(top,off)
 
         count=cv
 
@@ -631,29 +607,14 @@ while True:
 
         dots()
 
-        for files in cfiles:
-            if count != bottom:
-                count += 1
-                s.move(count, 1)
-                if os.path.isdir(files):
-                    s.addstr(files, color_pair(dir_color))
-                else:
-                    s.addstr(files, color_pair(file_color))
-                s.move(count,1)
-            else:
-                break
+        disp_c()
             
         s.move(cy,1)            
 
-        if os.path.isdir(cfiles[0]):
-            s.addstr(cfiles[0], color_pair(dir_color) + sel_fmt)
-            s.move(top,1)
-        else:
-            s.addstr(cfiles[0], color_pair(file_color) + sel_fmt)
-            s.move(top,1)
+        sel(0, "c")
 
         gcwd()
-        s.move(cy,1)
-    else:
+        s.move(cy,off)
+    else:    
         continue
 endwin()
