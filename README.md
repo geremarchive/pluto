@@ -2,7 +2,7 @@
  
 <p align="center">A simple and rice-able file manager.</center>
 
-[![asciicast](https://asciinema.org/a/213618.svg)](https://asciinema.org/a/213618)
+[![asciicast](https://asciinema.org/a/217505.svg)](https://asciinema.org/a/217505)
 
 <p align="center">Pluto running with the <b>oxide</b> theme and my configs</p>
 
