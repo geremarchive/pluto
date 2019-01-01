@@ -26,7 +26,9 @@ cwd_fmt=A_BOLD
 exit_key="q"
 del_key="d"
 rename_key="x"
+sel_key=" "
 move_key="m"
+copy_key="c"
 shidden=False
 thidden="."
 up=KEY_UP
@@ -52,8 +54,13 @@ if os.path.isfile(".config/pluto/config"):
                     exit_key = str(cval.rstrip())
                 elif cvar == "del":
                     del_key = str(cval.rstrip())
-                elif cvar == "move":
-                    move_key = str(cval.rstrip())
+                elif cvar == "select":
+                    if cval.rstrip() != "space":
+                        sel_key = str(cval.rstrip())
+                    else:
+                        sel_key = " "
+                elif cvar == "copy":
+                    copy_key = str(cval.rstrip())
                 elif cvar == "sel":
                     if cval.rstrip() == "dim":
                         sel_fmt=A_DIM
@@ -71,7 +78,9 @@ if os.path.isfile(".config/pluto/config"):
                 elif cvar == "toggle-hidden":
                     thidden == str(cval.rstrip())
                 elif cvar == "move":
-                    move_key == str(cval.rstrip())
+                    move_key = str(cval.rstrip())
+                elif cvar == "copy":
+                    copy_key = str(cval.rstrip())
                 elif cvar == "up":
                     if str(cval.rstrip()) == "up":
                         up=KEY_UP
@@ -159,9 +168,9 @@ use_default_colors()
 
 curs_set(0)
 
-moving = False
+selecting = False
 
-move_file=""
+sel_file=""
 
 for i in range(0, 256):
     init_pair(i + 1, i, -1)
@@ -174,12 +183,12 @@ def gcwd():
         gcwd = str1 = ''.join(gcwd)
     else:
         gcwd = cwd
-    if moving == False:
+    if selecting == False:
         s.addstr(str(gcwd), color_pair(cwd_color) + cwd_fmt)
         s.move(1,len(gcwd)+off)
-        s.addstr("       ")
+        s.addstr("         ")
     else:
-        s.addstr(str(gcwd) + " - move", color_pair(cwd_color) + cwd_fmt)
+        s.addstr(str(gcwd) + " - select", color_pair(cwd_color) + cwd_fmt)
 
 def sclear():
     s.move(cy, cx)
@@ -459,7 +468,10 @@ while True:
 
     elif key == ord(del_key):
         if scrolled == False:
-            system("rm -rf " + cfiles[cfile])
+            if os.path.isfile(cfiles[cfile]):
+                remove(cfiles[cfile])
+            else:
+                rmdir(cfiles[cfile])
             sclear()
             cwd = getcwd()
             cfiles.clear()
@@ -485,6 +497,10 @@ while True:
             s.move(cy, off)
 
         elif scrolled == True:
+            if os.path.isfile(new[cfile]):
+                remove(new[cfile])
+            else:
+                rmdir(new[cfile])
             system("rm -rf " + new[cfile])
             sclear()
             cwd = getcwd()
@@ -514,44 +530,52 @@ while True:
                 s.move(cy, off)
             sel(cfile, "n")
 
-    elif key == ord(move_key):
-        if moving == False:
+    elif key == ord(sel_key):
+        if selecting == False:
             
-            move_cwd = cwd
+            sel_cwd = cwd
 
             if scrolled == True:
-                move_file = new[cfile]
+                sel_file = new[cfile]
             else:
-                move_file = cfiles[cfile]
+                sel_file = cfiles[cfile]
 
-            moving = True
+            selecting = True
         else:
-            moving = False
-            move(move_cwd + "/" + move_file, cwd + "/" + move_file)
+            continue
+        gcwd()
+        s.move(cy, off)
+    elif key == ord(move_key) and selecting == True or key == ord(copy_key) and selecting == True:
+        selecting = False
+        if key == ord(move_key):
+            move(sel_cwd + "/" + sel_file, cwd + "/" + sel_file)
+        else:
+            copy(sel_cwd + "/" + sel_file, cwd + "/" + sel_file)
 
-            cwd = getcwd()
-            cfiles.clear()
-            new.clear()
-            new = cfiles
-            cfiles = listdir(cwd)
-            dots()
+        cwd = getcwd()
+        cfiles.clear()
+        new.clear()
+        new = cfiles
+        cfiles = listdir(cwd)
+        dots()
 
-            sclear()
-            cy = top
-            sc1 = bottom
-            sc2 = 0
-            cfile=0
-            index = 0
-            scrolled = False
+        sclear()
+        cy = top
+        sc1 = bottom
+        sc2 = 0
+        cfile=0
+        index = 0
+        scrolled = False
 
-            disp_c()
+        disp_c()
 
-            s.move(cy, off)
+        s.move(cy, off)
 
-            sel(cfile, "c")
+        sel(cfile, "c")
 
         gcwd()
         s.move(cy, off)
+
     elif chr(key) in mackeys:
         scrolled = False
         end = False

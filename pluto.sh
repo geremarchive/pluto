@@ -36,9 +36,9 @@ default() {
 	touch ~/.config/pluto/themes/dwarf.plut
 	printf"file=250\ndir=53\ncwd-color=197\ncwd-format=bold" > ~/.config/pluto/themes/dwarf.plut
 	touch ~/.config/pluto/themes/oxide.plut
-	printf"file=209\ndir=245\ncwd-color=250\ncwd-format=bold" > ~/.config/pluto/themes/oxide.plut
-	printf"\033[32;1mThemes Generated!\033[0m\n"
-	printf"\033[34;1mInstallation Finished!\033[0m\n"
+	printf "file=209\ndir=245\ncwd-color=250\ncwd-format=bold" > ~/.config/pluto/themes/oxide.plut
+	printf "\033[32;1mThemes Generated!\033[0m\n"
+	printf "\033[34;1mInstallation Finished!\033[0m\n"
 	exit
 }
 
