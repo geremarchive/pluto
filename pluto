@@ -1,644 +1,289 @@
-#!/usr/bin/env python3
+#!/usr/bin/python -B
 
 from curses import *
+from sys import *
 from os import *
 from shutil import *
-from sys import *
+from subprocess import *
 import os.path
-import io
+import sys
+
+sys.dont_write_bytecode = True
+
+from parser import *
 
 cwd = getcwd()
-cfiles = listdir(cwd)
-
 home = os.path.expanduser("~")
 
-chdir(home)
-
 s = initscr()
-
-comment = False
-
-file_color=0
-dir_color=13
-cwd_color=0
-sel_fmt=A_REVERSE
-cwd_fmt=A_BOLD
-exit_key="q"
-del_key="d"
-rename_key="x"
-sel_key=" "
-move_key="m"
-copy_key="c"
-shidden=False
-thidden="."
-up=KEY_UP
-down=KEY_DOWN
-left=KEY_LEFT
-right=KEY_RIGHT
-
-macros = {}
-mackeys = []
-
-dirs = []
-
-if os.path.isfile(".config/pluto/config"):
-    chdir(".config/pluto")
-    with io.open("config", "r") as config:
-        for line in config:
-            if line[0] == "#" or line.isspace() or len(line) == 0:
-                continue
-            elif "=" in list(line) and "#" not in list(line):
-                cvar = line.split("=")[0]
-                cval = line.split("=")[1]
-                if cvar == "exit":
-                    exit_key = str(cval.rstrip())
-                elif cvar == "del":
-                    del_key = str(cval.rstrip())
-                elif cvar == "select":
-                    if cval.rstrip() != "space":
-                        sel_key = str(cval.rstrip())
-                    else:
-                        sel_key = " "
-                elif cvar == "copy":
-                    copy_key = str(cval.rstrip())
-                elif cvar == "sel":
-                    if cval.rstrip() == "dim":
-                        sel_fmt=A_DIM
-                    elif cval.rstrip() == "rev":
-                        sel_fmt=A_REVERSE
-                    elif cval.rstrip() == "bold":
-                        sel_fmt=A_BOLD
-                    elif cval.rstrip() == "underline":
-                        sel_fmt=A_UNDERLINE
-                elif cvar == "show-hidden":
-                    if cval.rstrip() == "true":
-                        shidden=True
-                    elif cval.rstrip() == "false":
-                        shidden=False
-                elif cvar == "toggle-hidden":
-                    thidden == str(cval.rstrip())
-                elif cvar == "move":
-                    move_key = str(cval.rstrip())
-                elif cvar == "copy":
-                    copy_key = str(cval.rstrip())
-                elif cvar == "up":
-                    if str(cval.rstrip()) == "up":
-                        up=KEY_UP
-                    else:
-                        up=str(cval.rstrip())
-                elif cvar == "down":
-                    if str(cval.rstrip()) == "down":
-                        down=KEY_DOWN
-                    else:
-                        down=str(cval.rstrip())
-                elif cvar == "left":
-                    if str(cval.rstrip()) == "left":
-                        left=KEY_LEFT
-                    else:
-                        left=str(cval.rstrip())
-                elif cvar == "right":
-                    if str(cval.rstrip()) == "right":
-                        right=KEY_RIGHT
-                    else:
-                        right=str(cval.rstrip())
-                elif line[0:5] == "macro":
-                    mdir = line.split(":")[1].split("=")[0]
-                    mkey = line.split(":")[1].split("=")[1]
-                    macros.update({mkey.rstrip(): mdir})
-                elif cvar == "theme":
-                    if os.path.isdir("themes"):
-                        chdir("themes")
-                        with io.open(cval.rstrip() + ".plut", "r") as theme:
-                            for line in theme:
-                                if line[0] == "#" or line.isspace() or len(line) == 0:
-                                    continue
-                                elif "=" in list(line) and "#" not in list(line):
-                                    cvar = line.split("=")[0]
-                                    cval = line.split("=")[1]
-                                    if cvar == "file":
-                                        file_color = int(cval)
-                                    elif cvar == "dir":
-                                        dir_color = int(cval)
-                                    elif cvar == "cwd-color":
-                                        cwd_color = int(cval)
-                                    elif cvar == "cwd-format":
-                                        if str(cval.rstrip()) == "rev":
-                                            cwd_fmt = A_REVERSE
-                                        elif str(cval.rstrip()) == "bold":
-                                            cwd_fmt = A_BOLD
-                                        elif str(cval.rstrip()) == "underline":
-                                            cwd_fmt = A_UNDERLINE
-                                        elif str(cval.rstrip()) == "dim":
-                                            cwd_fmt = A_DIM
-                elif cvar == "rename":
-                    rename_key = str(cval.rstrip())
-            else:
-                endwin()
-                print("\033[101mError -->\033[0m " + "\033[1m" + line.rstrip() + "\033[0m is invalid")
-                exit()
-
-my, mx = s.getmaxyx()
-
-index=0
-
-chdir(cwd)
-
-cv=2
-bottom=my-2
-top=3
-off=1
-
-cfile = 0
-cy, cx = top, 1
-
-count=cv
-
-sc1 = bottom
-sc2 = 0
-
-new=[]
-
-scrolled = False
-
-end=False
-
-start_color()
-
-use_default_colors()
-
-curs_set(0)
-
-selecting = False
-
-sel_file=""
-
-for i in range(0, 256):
-    init_pair(i + 1, i, -1)
-
-def gcwd():
-    s.move(1,off)
-    if home in cwd:
-        gcwd = cwd.split(home)
-        gcwd[0] = "~"
-        gcwd = str1 = ''.join(gcwd)
-    else:
-        gcwd = cwd
-    if selecting == False:
-        s.addstr(str(gcwd), color_pair(cwd_color) + cwd_fmt)
-        s.move(1,len(gcwd)+off)
-        s.addstr("         ")
-    else:
-        s.addstr(str(gcwd) + " - select", color_pair(cwd_color) + cwd_fmt)
-
-def sclear():
-    s.move(cy, cx)
-    for iy in range(0, my):
-        s.move(0, iy)
-        for ix in range(0, mx):
-            s.addstr(" ")
-            s.move(iy , ix)
-
-def notempty(ndir):
-    chdir(ndir)
-    ncwd = getcwd()
-    ncf = listdir(ncwd)
-    chdir("..")
-    return len(ncf) != 0
-
-def getkeys():
-    for key in macros:
-        mackeys.append(key.rstrip())
-
-def dots():
-    global cfiles, dirs
-    dirs.clear()
-    if shidden == False:
-        index = 0
-        while index < len(cfiles):
-            files = cfiles[index]
-            if files[0] == ".":
-                cfiles.pop(cfiles.index(files))
-            else:
-                index += 1
-        index=0
-        while index < len(cfiles):
-            files = cfiles[index]
-            if os.path.isdir(files):
-                cfiles.pop(cfiles.index(files))
-                dirs.append(files)
-            else:
-                index += 1
-        dirs = sorted(dirs, key=lambda s: s.lower())
-        nc = sorted(cfiles, key=lambda s: s.lower())
-        cfiles.clear()
-        cfiles = dirs + nc
-    else:
-        index=0
-        while index < len(cfiles):
-            files = cfiles[index]
-            if os.path.isdir(files):
-                cfiles.pop(cfiles.index(files))
-                dirs.append(files)
-            else:
-                index += 1
-        dirs = sorted(dirs, key=lambda s: s.lower())
-        nc = sorted(cfiles, key=lambda s: s.lower())
-        cfiles.clear()
-        cfiles = dirs + nc       
-        pass
-
-def disp_c():
-    global count, cfiles, files
-    count = top-1
-    for files in cfiles:
-        if count != bottom:
-            count += 1
-            s.move(count, off)
-            if os.path.isdir(files):
-                s.addstr(files, color_pair(dir_color))
-            else:
-                s.addstr(files, color_pair(file_color))
-            s.move(count,off)
-        else:
-            break
-
-def disp_n():
-    global count, cfiles, files
-    count = cv
-    for files in new:
-        if count != bottom:
-            count += 1
-            s.move(count, off)
-            if os.path.isdir(files):
-                s.addstr(files, color_pair(dir_color))
-            else:
-                s.addstr(files, color_pair(file_color))
-            s.move(count,off)
-        else:
-            break
-
-def sel(numb, dt):
-    if dt == "c":
-        dt = cfiles
-    elif dt == "n":
-        dt = new
-    if os.path.isdir(dt[numb]):
-        s.addstr(dt[numb], color_pair(dir_color) + sel_fmt)
-        s.move(cy,off)
-    else:
-        s.addstr(dt[numb], color_pair(file_color) + sel_fmt)
-        s.move(cy,off)
-
-def dsel(numb, dt):
-    if dt == "c":
-        dt = cfiles
-    elif dt == "n":
-        dt = new
-    if os.path.isdir(dt[numb]):
-        s.addstr(dt[numb], color_pair(dir_color))
-        s.move(cy,off)
-    else:
-        s.addstr(dt[numb], color_pair(file_color))
-        s.move(cy,off)
-
-getkeys()
-
+maxY, maxX = s.getmaxyx()
 noecho()
 s.keypad(1)
+curs_set(0)
+start_color()
+use_default_colors()
 
-dots()
+for i in range(0, 256):
+    init_pair(i+ 1, i, -1)
 
-s.move(top, off)
+top = topOffset
+bottom = maxY-bottomOffset
+off = sideOffset
+count = 0
+filen = 0
 
-disp_c()
+buff1, buff2 = 0, bottom
 
-s.move(top,off)
+currY, currX = top, off
 
-sel(0, "c")
+currFiles = listdir(cwd)
+scrollFiles = []
+currSort = []
+selectedFiles = {}
 
-gcwd()
+def screenClear():
+    for iy in range(0, maxY):
+        s.move(0, iy)
+        for ix in range(0, maxX):
+            s.addstr(" ")
+            s.move(iy, ix)
+    s.move(top, off)
 
-s.move(top, off)
+def lineClear(y, x):
+    for ix in range(0, x):
+        s.addstr(" ")
+        s.move(y, ix)
 
-while True:
-    key = s.getch()
-    if key == ord(exit_key):
+def colorText(string, fmt):
+    if str(string) in selectedFiles:
+        selected = "*"
+    else:
+        selected = ""
+
+    if dirSlash:
+        slash = "/"
+    else:
+        slash = ""
+
+    if os.path.isdir(str(string)):
+        s.addstr(str(string) + slash + selected, color_pair(fileColors['dir']) + fmt)
+    elif str(string).split('.')[len(str(string).split('.'))-1] in fileColors:
+        s.addstr(str(string) + selected, color_pair(fileColors[str(string).split('.')[len(str(string).split('.'))-1]]) + fmt)
+    else:
+        s.addstr(str(string) + selected, color_pair(fileColors['file']) + fmt)
+
+def dispFile(array):
+    global count
+    count = top
+    for item in array:
+        if count != bottom:
+            s.move(count, off)
+            colorText(item, A_NORMAL)
+            count += 1
+        else:
+            break
+
+def selFile(array, index):
+    s.move(currY, currX)
+    colorText(array[index], selType)
+    s.move(currY, currX)
+
+def dSelFile(array, index):
+    s.move(currY, currX)
+    colorText(array[index], A_NORMAL)
+    s.move(currY, currX)
+
+def scroll(direction):
+    global scrollFiles, buff1, buff2
+    if direction == 0:
+        buff1 += 1
+        buff2 += 1
+    else:
+        buff1 -= 1
+        buff2 -= 1
+
+def sortFiles():
+    global currFiles, currSort
+    currSort = []
+    index = 0
+    while index < len(currFiles):
+        if currFiles[index][0] == ".":
+            currFiles.pop(currFiles.index(currFiles[index]))
+        else:
+            index += 1
+
+    index = 0
+    while index < len(currFiles):
+        files = currFiles[index]
+        if os.path.isdir(files):
+            currFiles.pop(currFiles.index(files))
+            currSort.append(files)
+        else:
+            index += 1
+    currSort = sorted(currSort, key=lambda s: s.lower())
+    nc = sorted(currFiles, key=lambda s: s.lower())
+    currFiles = currSort + nc
+
+def moveDir(newdir):
+    global cwd, currY, currX, buff1, buff2, filen, currSort, currFiles
+    chdir(newdir)
+    cwd = getcwd()
+    currY, currX = top, off
+    buff1, buff2 = 0, bottom
+    filen = 0
+    currFiles = listdir(cwd)
+    sortFiles()
+    screenClear()
+    bar()
+    s.move(currY, currX)
+    dispFile(currFiles)
+    selFile(currFiles, filen)
+
+def removeFiles(files):
+    global cwd, currFiles, filen
+    if os.path.isfile(files):
+        remove(files)
+    else:
+        rmtree(files)
+
+    cwd = getcwd()
+    currFiles = listdir(cwd)
+    sortFiles()
+
+def bar():
+    if barEnable: 
+        if barLocale == "bottom": 
+            s.move(maxY-barY, barX)
+        elif barLocale == "top":
+            s.move(barY, barX)
+        else:
+            pass
+
+        if selectedFiles == {}: 
+            s.addstr(cwd + "                              ", color_pair(barColor) + A_DIM)
+        else:
+            s.addstr(cwd + " [" + str(len(selectedFiles)) + "]", color_pair(barColor) + A_DIM)
+        s.move(currY, currX)
+    else:
+        pass
+
+def openFilePlut(fileDict, ext, fname):
+    if fileDict[ext][1] == 'term':
+        run([fileDict[ext][0], fname])
         endwin()
-        exit()
-    elif key == down == KEY_DOWN and key == down or str(down).isalpha() and key == ord(down):
-        if cfile != len(cfiles)-1 and cy != bottom and scrolled == False:
-            dsel(cfile, "c")
+        s.refresh()
+    elif fileDict[ext][1] == 'back':
+        system(fileDict[ext][0] + " " + fname + " &> /dev/null &")
+        endwin()
+        s.refresh()
 
-            cfile += 1
-            cy += 1 
-            s.move(cy, off)
-            sel(cfile, "c")
-        else:
-            if cfile == len(new)-1 or new[-top:] == cfiles[-1:] and cy == bottom:
-                end=True
+
+def main():
+    global filen, currFiles, currY, currX, currSort, cwd, selectedFiles, maxY, maxX
+    sortFiles()
+    dispFile(currFiles[buff1:buff2])
+    selFile(currFiles, filen)
+    bar()
+
+    while True:
+        keyInput = s.getch()
+        maxY, maxX = s.getmaxyx()
+        if keyInput == keyMaps['quit']:
+            endwin()
+            exit()
+        elif keyInput == keyMaps['down']:
+            if currY == bottom-1 and filen != len(currFiles)-1:
+                screenClear()
+                bar()
+                scroll(0)
+                filen += 1
+                dispFile(currFiles[buff1:buff2])
+                selFile(currFiles, filen)
+            elif currY == bottom-1 or filen == len(currFiles)-1:
                 continue
-            elif cy == bottom and end == False:
-                scrolled = True
-                sclear()
-                sc2 += 1
-                sc1 += 1
-                new = cfiles[sc2:sc1]
-                s.move(top,off)
-                count=cv
-                disp_n()
-                sel(cfile, "n")
-                gcwd()
-                s.move(my-2, off)
-
-            elif cy != bottom and scrolled == True:
-                dsel(cfile, "n")
-
-                cfile += 1
-                cy += 1 
-                s.move(cy, 1)
-                sel(cfile, "n")
-
-                gcwd()
-                s.move(cy, off)
-                
-                
-    elif up == KEY_UP and key == up or str(up).isalpha() and key == ord(up):
-            if cfile != 0 and cy != top and scrolled == False:
-                dsel(cfile, "c")
-
-                cfile -= 1
-                cy -= 1 
-                s.move(cy, off)
-                sel(cfile, "c")
             else:
-                if scrolled == False:
+                dSelFile(currFiles, filen)
+                filen += 1
+                currY += 1
+                selFile(currFiles, filen)
+        elif keyInput == keyMaps['up']:
+            if currY == top and filen == 0:
+                continue
+            elif currY == top and filen != 0:
+                screenClear()
+                bar()
+                scroll(1)
+                filen -= 1
+                dispFile(currFiles[buff1:buff2])
+                selFile(currFiles, filen)
+            else:
+                dSelFile(currFiles, filen)
+                filen -= 1
+                currY -= 1
+                selFile(currFiles, filen)
+        elif keyInput == keyMaps['left']:
+            moveDir("..")
+        elif keyInput == keyMaps['right']:
+            openFile = currFiles[filen]
+            if os.path.isdir(openFile):
+                if listdir(openFile) != []:
+                    moveDir(str(openFile))
+                else:
                     continue
-                elif scrolled == True:
-                    if cy != top:
-                        dsel(cfile, "n")
-
-                        cfile -= 1
-                        cy -= 1 
-                        s.move(cy, off)
-                        sel(cfile, "n")
-                    elif cy == top and cfiles[0] != new[0]:
-                        sclear()
-                        sc2 -= 1
-                        sc1 -= 1
-                        new = cfiles[sc2:sc1]
-                        s.move(top,off)
-                        
-                        disp_n()
-
-                        s.move(top,off)
-                        cfile=0
-
-                        sel(cfile, "n")
-
-                        gcwd()
-                        s.move(cy, off)
-
-                    else:
-                        continue
-
-    elif right == KEY_RIGHT and key == right or str(right).isalpha() and key == ord(right):
-        end = False
-        scrolled == False
-        if os.path.isdir(cfiles[cfile]) and notempty(cfiles[cfile]) or scrolled == True and os.path.isdir(new[cfile]) and notempty(new[cfile]):
-            sclear()
-            s.refresh()
-            if scrolled == False:
-                chdir(cfiles[cfile])
             else:
-                chdir(new[cfile])
-            scrolled = False
+                if openFile.split('.')[-1] not in openFiles:
+                    openFilePlut(openFiles, 'file', openFile)
+                elif openFile.split('.')[-1] in openFiles:
+                    openFilePlut(openFiles, openFile.split('.')[-1], openFile)
+
+        elif keyInput == keyMaps['delete']:
+            removeFiles(str(currFiles[filen]))
+            screenClear()
+            bar()
+            if currY == top and buff1 == 0:
+                pass
+                dispFile(currFiles)
+            elif buff1 == 0:
+                filen -= 1
+                currY -= 1
+                dispFile(currFiles)
+            else:
+                filen -= 1
+                scroll(1)
+                dispFile(currFiles[buff1:buff2])
+
+            selFile(currFiles, filen)
+        elif keyInput == keyMaps['select']:
+            if currFiles[filen] not in selectedFiles:
+                selectedFiles[str(currFiles[filen])] = cwd
+            else:
+                del selectedFiles[str(currFiles[filen])]
+            screenClear()
+            bar()
+            dispFile(currFiles[buff1:buff2])
+            selFile(currFiles, filen)
+        elif keyInput == keyMaps['copy']:
+            for key, val in selectedFiles.items():
+                copyfile(val + "/" + key, cwd + "/" + key)
+            selectedFiles = {}
+            screenClear()
+            bar()
             cwd = getcwd()
-            cfiles.clear()
-            new.clear()
-            cfiles = listdir(cwd)
-            cfile = 0
-            cy, cx = top, off
-            s.move(top,off)
-
-            count=cv
-
-            index=0
-
-            dots()
-
-            disp_c()
-            s.move(top,off)
-
-            sel(0, "c")
-            gcwd()
-            s.move(top, off)            
-
+            currFiles = listdir(cwd)
+            sortFiles()
+            dispFile(currFiles[buff1:buff2])
+            selFile(currFiles, filen)
+        elif keyInput == keyMaps['move']:
+            for key, val in selectedFiles.items():
+                move(val + "/" + key, cwd + "/" + key)
+            selectedFiles = {}
+            screenClear()
+            bar()
+            cwd = getcwd()
+            currFiles = listdir(cwd)
+            sortFiles()
+            dispFile(currFiles[buff1:buff2])
+            selFile(currFiles, filen)
         else:
             continue
-    elif left == KEY_LEFT and key == left or str(left).isalpha() and key == ord(left):
-        scrolled = False
-        end = False
-        sc1 = bottom
-        sc2 = 0
-        sclear()
-        s.refresh()
-        chdir("..")
-        cwd = getcwd()
-        cfiles.clear()
-        new.clear()
-        cfiles = listdir(cwd)
-        cfile = 0
-        cy, cx = top, off
-        s.move(top,off)
-
-        count=cv
-
-        index=0
-
-        dots()
-
-        disp_c()
-            
-        s.move(top,1)            
-
-        sel(0, "c")
-        
-        gcwd()
-        s.move(top, off)        
-
-    elif key == ord(del_key):
-        if scrolled == False:
-            if os.path.isfile(cfiles[cfile]):
-                remove(cfiles[cfile])
-            else:
-                rmdir(cfiles[cfile])
-            sclear()
-            cwd = getcwd()
-            cfiles.clear()
-            cfiles = listdir(cwd)
-
-            index=0
-    
-            dots()
-
-            disp_c()
-
-            if cy != top:
-                cy -= 1
-                cfile -= 1
-                s.move(cy, off)
-            else:
-                s.move(cy, off)
-                cfile = 0
-
-            sel(cfile, "c")
-
-            gcwd()
-            s.move(cy, off)
-
-        elif scrolled == True:
-            if os.path.isfile(new[cfile]):
-                remove(new[cfile])
-            else:
-                rmdir(new[cfile])
-            system("rm -rf " + new[cfile])
-            sclear()
-            cwd = getcwd()
-            cfiles.clear()
-            new.clear()
-            cfiles = listdir(cwd)
-            
-            sc2 -= 1
-            sc1 -= 1
-
-            index=0
-    
-            dots()
-
-            count=cv
-            
-            new = cfiles[sc2:sc1]
-
-            disp_n()
-            
-            gcwd()
-
-            if cy == top:
-                cy = top
-                s.move(cy, off)
-            else:
-                s.move(cy, off)
-            sel(cfile, "n")
-
-    elif key == ord(sel_key):
-        if selecting == False:
-            
-            sel_cwd = cwd
-
-            if scrolled == True:
-                sel_file = new[cfile]
-            else:
-                sel_file = cfiles[cfile]
-
-            selecting = True
-        else:
-            continue
-        gcwd()
-        s.move(cy, off)
-    elif key == ord(move_key) and selecting == True or key == ord(copy_key) and selecting == True:
-        selecting = False
-        if key == ord(move_key):
-            move(sel_cwd + "/" + sel_file, cwd + "/" + sel_file)
-        else:
-            copy(sel_cwd + "/" + sel_file, cwd + "/" + sel_file)
-
-        cwd = getcwd()
-        cfiles.clear()
-        new.clear()
-        new = cfiles
-        cfiles = listdir(cwd)
-        dots()
-
-        sclear()
-        cy = top
-        sc1 = bottom
-        sc2 = 0
-        cfile=0
-        index = 0
-        scrolled = False
-
-        disp_c()
-
-        s.move(cy, off)
-
-        sel(cfile, "c")
-
-        gcwd()
-        s.move(cy, off)
-
-    elif chr(key) in mackeys:
-        scrolled = False
-        end = False
-        sc1 = bottom
-        sc2 = 0
-        sclear()
-        s.refresh()
-        chdir(macros.get(str(chr(key))))
-        cwd = getcwd()
-        cfiles.clear()
-        new.clear()
-        cfiles = listdir(cwd)
-        cfile = 0
-        cy, cx = top, off
-        s.move(top,off)
-
-        count=cv
-
-        index=0
-
-        dots()
-
-        disp_c()
-            
-        s.move(top,off)
-
-        sel(0, "c")
-        
-        gcwd()
-        s.move(top, off)
-    elif key == ord(thidden):
-        if shidden == True:
-            shidden = False
-        else:
-            shidden = True
-        scrolled = False
-        end = False
-        sc1 = bottom
-        sc2 = 0
-        sclear()
-        s.refresh()
-        cwd = getcwd()
-        cfiles.clear()
-        new.clear()
-        cfiles = listdir(cwd)
-        cfile = 0
-        cy, cx = top, off
-        s.move(top,off)
-
-        count=cv
-
-        index=0
-
-        dots()
-
-        disp_c()
-            
-        s.move(cy,1)            
-
-        sel(0, "c")
-
-        gcwd()
-        s.move(cy,off)
-    else:    
-        continue
-endwin()
+main()
