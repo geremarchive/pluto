@@ -4,7 +4,7 @@
 
 [![asciicast](https://asciinema.org/a/224295.svg)](https://asciinema.org/a/224295)
 
-<p align="center">Pluto running with the <b>default</b> theme and my configs</p>
+<p align="center">Pluto running with my configs</p>
 
 <h1 align="center"><i>Installing Pluto</i></h1>
 
