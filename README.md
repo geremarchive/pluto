@@ -10,7 +10,9 @@
 
 <h1 align="center"><i>Installing Pluto</i></h1>
 
-Coming soon...
+```shell
+curl "https://raw.githubusercontent.com/geremachek/colory/master/install.sh" | sh
+```
 
 <h1 align="center"><i>Configuring Pluto</i></h1>
 
