@@ -6,7 +6,7 @@ chmod +x pluto.bin
 
 sudo mv pluto.bin /usr/bin/pluto
 
-if [ -d $HOME/.config ]
+if [ ! -d $HOME/.config ]
 then
 	mkdir $HOME/.config
 fi
