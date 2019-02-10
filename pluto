@@ -31,6 +31,7 @@ bottom = maxY-bottomOffset
 off = sideOffset
 count = 0
 filen = 0
+viewDots = False
 
 buff1, buff2 = 0, bottom
 
@@ -55,7 +56,7 @@ def lineClear(y, x):
         s.move(y, ix)
 
 def colorText(string, fmt):
-    if str(string) in selectedFiles:
+    if str(string) in selectedFiles and selectedFiles[str(string)] == cwd:
         selected = "*"
     else:
         selected = ""
@@ -106,11 +107,14 @@ def sortFiles():
     global currFiles, currSort
     currSort = []
     index = 0
-    while index < len(currFiles):
-        if currFiles[index][0] == ".":
-            currFiles.pop(currFiles.index(currFiles[index]))
-        else:
-            index += 1
+    if viewDots == False:
+        while index < len(currFiles):
+            if currFiles[index][0] == ".":
+                currFiles.pop(currFiles.index(currFiles[index]))
+            else:
+                index += 1
+    else:
+        pass
 
     index = 0
     while index < len(currFiles):
@@ -179,7 +183,7 @@ def openFilePlut(fileDict, ext, fname):
 
 
 def main():
-    global filen, currFiles, currY, currX, currSort, cwd, selectedFiles, maxY, maxX
+    global filen, currFiles, currY, currX, currSort, cwd, selectedFiles, maxY, maxX, viewDots
     sortFiles()
     dispFile(currFiles[buff1:buff2])
     selFile(currFiles, filen)
@@ -284,6 +288,23 @@ def main():
             sortFiles()
             dispFile(currFiles[buff1:buff2])
             selFile(currFiles, filen)
+        elif keyInput == keyMaps['toggle-dot']:
+            if viewDots == False:
+                viewDots = True
+            else:
+                viewDots = False
+
+            moveDir(".")
         else:
-            continue
+            for key, val in keyMaps.items():
+                if val == keyInput:
+                    if key[:3] == "cd:":
+                        moveDir(key[3:])
+                    elif key[:7] == "script:":
+                        system(key[7:].rstrip() + " " + cwd + "/" +currFiles[filen] + " &> /dev/null &")
+                        endwin()
+                        s.refresh()
+                        moveDir(".")
+                else:
+                    continue
 main()
