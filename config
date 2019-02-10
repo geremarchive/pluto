@@ -1,0 +1,28 @@
+dir-slash true
+select-type reverse
+
+bar true
+bar-locale bottom
+barx 1
+bary 1
+bar-color 3
+
+side-offset 0
+top-offset 0
+bottom-offset 2
+
+bind up up
+bind down down
+bind left left
+bind right right
+bind q quit
+bind space select
+bind d delete
+bind m move
+bind c copy
+bind . toggle-dot
+
+open term file vi
+
+color dir 5
+color file 20

@@ -293,8 +293,6 @@ def main():
                 viewDots = True
             else:
                 viewDots = False
-
-            moveDir(".")
         else:
             for key, val in keyMaps.items():
                 if val == keyInput:
