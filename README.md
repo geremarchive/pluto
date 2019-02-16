@@ -29,4 +29,51 @@ A configuration file is located in ```~/.config/pluto```. This allows you to opt
 ## Miscellaneous
 
 * ```dir-slash [true/false]```
- * Enable the slash on the end of directories
+> Enable the slash on the end of directories
+* ```select-type [reverse/bold/dim]
+> Change how files are visually selected
+
+## Bar
+
+* ```bar [true/false]```
+> Enable the bar
+* ```bar-locale [bottom/top]```
+> Change the location of the bar
+* ```barx [n]```
+> Set bar x offset to n
+* ```bary [n]```
+> Set bar y offset to n
+* ```bar-color [n]```
+> Set bar color to n
+* ```bar-format [reverse/bold/dim/none]```
+> Change how the bar is formated
+
+## Offset
+
+* ```side-offset [n]```
+> Set the element x offset to n
+* ```top-offset [n]```
+> Set the offset of the top of the elements to n
+* ```bottom-offset [n]```
+> Set the offset of the bottom of the elements to n
+
+## Binding
+
+* ```bind [key] [action]```
+> Bind a key to an action
+* ```bind [key] cd:[path]```
+> Bind key to a directory jump to path
+* ```bind [key] script:[script]```
+> Bind key to the execution of script on selected file
+
+## Opening Files
+
+* ```open term [file/file extension] [program]```
+> Open any matching file extension or every file with program in a terminal
+* ```open back [file/file extension] [program]```
+> Open any matching file extension or every file with program in a GUI or background process
+
+## Colors
+
+* ```color [dir/file/file extension] n```
+> Set the color of any file, dir or matching file extension to n
