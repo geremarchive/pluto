@@ -5,7 +5,8 @@ bar true
 bar-locale bottom
 barx 1
 bary 1
-bar-color 244
+bar-color 3
+bar-format none
 
 side-offset 0
 top-offset 0
@@ -25,4 +26,4 @@ bind . toggle-dot
 open term file vi
 
 color dir 5
-color file 0
+color file 20

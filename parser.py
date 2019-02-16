@@ -59,6 +59,15 @@ if os.path.isfile(home + '/.config/pluto/config'):
                 barY = int(line.split(' ')[1].rstrip())
             elif command == "bar-color":
                 barColor = int(line.split(' ')[1].rstrip())
+            elif command == "bar-format":
+                if line.split(' ')[1].rstrip() == "reverse":
+                    barFormat = A_REVERSE
+                elif line.split(' ')[1].rstrip() == "bold":
+                    barFormat = A_BOLD
+                elif line.split(' ')[1].rstrip() == "dim":
+                    barFormat = A_DIM
+                elif line.split(' ')[1].rstrip() == "none":
+                    barFormat = A_NORMAL
             elif command == "color":
                 fileColors[line.split(' ')[1].rstrip()] = int(line.split(' ')[2].rstrip())
             elif command == "open":

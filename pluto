@@ -50,10 +50,10 @@ def screenClear():
             s.move(iy, ix)
     s.move(top, off)
 
-def lineClear(y, x):
-    for ix in range(0, x):
+def lineClear(y):
+    for i in range(0, maxX):
         s.addstr(" ")
-        s.move(y, ix)
+        s.move(y, i)
 
 def colorText(string, fmt):
     if str(string) in selectedFiles and selectedFiles[str(string)] == cwd:
@@ -158,15 +158,19 @@ def bar():
     if barEnable: 
         if barLocale == "bottom": 
             s.move(maxY-barY, barX)
+            by = maxY-barY
         elif barLocale == "top":
             s.move(barY, barX)
+            by = barY
         else:
             pass
 
-        if selectedFiles == {}: 
-            s.addstr(cwd + "                              ", color_pair(barColor) + A_DIM)
+        if selectedFiles == {}:
+            lineClear((maxY-barY)-1)
+            s.move(by, barX)
+            s.addstr(cwd, color_pair(barColor) + barFormat)
         else:
-            s.addstr(cwd + " [" + str(len(selectedFiles)) + "]", color_pair(barColor) + A_DIM)
+            s.addstr(cwd + " [" + str(len(selectedFiles)) + "]", color_pair(barColor) + barFormat)
         s.move(currY, currX)
     else:
         pass
@@ -183,15 +187,24 @@ def openFilePlut(fileDict, ext, fname):
 
 
 def main():
-    global filen, currFiles, currY, currX, currSort, cwd, selectedFiles, maxY, maxX, viewDots
+    global filen, currFiles, currY, currX, currSort, cwd, selectedFiles, maxY, maxX, viewDots, buff1, buff2, top, bottom
     sortFiles()
     dispFile(currFiles[buff1:buff2])
     selFile(currFiles, filen)
     bar()
 
     while True:
-        keyInput = s.getch()
         maxY, maxX = s.getmaxyx()
+        bottom = maxY-bottomOffset
+        top = topOffset
+        screenClear()
+        sortFiles()
+        #buff1, buff2 = 0, bottom
+        dispFile(currFiles[buff1:buff2])
+        selFile(currFiles, filen)
+        bar()
+        s.refresh()
+        keyInput = s.getch()
         if keyInput == keyMaps['quit']:
             endwin()
             exit()
@@ -293,6 +306,8 @@ def main():
                 viewDots = True
             else:
                 viewDots = False
+
+            moveDir('.')
         else:
             for key, val in keyMaps.items():
                 if val == keyInput:
