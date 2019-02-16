@@ -5,7 +5,9 @@
 <h1 align="center"><i>Features</i></h1>
 
 * Fast (Compiled Python Code)
-* Configurable, you can map any key to and script to improve your workflow
+* Configurable, you can map any key to any function or script to improve your workflow
+* Automatic screen resize
+* Instantly open files in your favorite terminal or GUI programs
 * Simple
 
 <center>
@@ -22,4 +24,9 @@ curl "https://raw.githubusercontent.com/geremachek/pluto/master/install.sh" | sh
 
 <h1 align="center"><i>Configuring Pluto</i></h1>
 
-Coming soon...
+A configuration file is located in ```~/.config/pluto```. This allows you to optomize pluto for your workflow
+
+## Miscellaneous
+
+* ```dir-slash [true/false]```
+ * Enable the slash on the end of directories
