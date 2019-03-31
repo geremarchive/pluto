@@ -36,7 +36,6 @@ viewDots = False
 buff1, buff2 = 0, bottom
 
 currY, currX = top, off
-
 currFiles = listdir(cwd)
 scrollFiles = []
 currSort = []
@@ -67,11 +66,20 @@ def colorText(string, fmt):
         slash = ""
 
     if os.path.isdir(str(string)):
-        s.addstr(str(string) + slash + selected, color_pair(fileColors['dir']) + fmt)
+        if 'dir' in fileIcons:
+            s.addstr(str(fileIcons['dir']) + "  " + str(string) + slash + selected, color_pair(fileColors['dir']) + fmt)
+        else:
+            s.addstr(str(string) + slash + selected, color_pair(fileColors['dir']) + fmt)
     elif str(string).split('.')[len(str(string).split('.'))-1] in fileColors:
-        s.addstr(str(string) + selected, color_pair(fileColors[str(string).split('.')[len(str(string).split('.'))-1]]) + fmt)
+        if str(string).split('.')[len(str(string).split('.'))-1] in fileIcons:
+            s.addstr(str(fileIcons[str(string).split('.')[len(str(string).split('.'))-1]]) + "  " + str(string) + selected, color_pair(fileColors[str(string).split('.')[len(str(string).split('.'))-1]]) + fmt)
+        else:
+            s.addstr(str(string) + selected, color_pair(fileColors[str(string).split('.')[len(str(string).split('.'))-1]]) + fmt)
     else:
-        s.addstr(str(string) + selected, color_pair(fileColors['file']) + fmt)
+        if 'file' in fileIcons:
+            s.addstr(str(fileIcons['file']) + "  " + str(string) + selected, color_pair(fileColors['file']) + fmt)
+        else:
+            s.addstr(str(string) + selected, color_pair(fileColors['file']) + fmt)
 
 def dispFile(array):
     global count

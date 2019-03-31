@@ -9,6 +9,9 @@ keyMaps = {
 fileColors = {
 }
 
+fileIcons = {
+}
+
 openFiles = {
 }
 
@@ -70,6 +73,8 @@ if os.path.isfile(home + '/.config/pluto/config'):
                     barFormat = A_NORMAL
             elif command == "color":
                 fileColors[line.split(' ')[1].rstrip()] = int(line.split(' ')[2].rstrip())
+                if len(line.split(' ')) == 4:
+                    fileIcons[line.split(' ')[1].rstrip()] = str(line.split(' ')[3].rstrip())
             elif command == "open":
                 openFiles[line.split(' ')[2].rstrip()] = [str(line.split(' ')[3].rstrip()), str(line.split(' ')[1].rstrip())]
             elif command == "bind":
