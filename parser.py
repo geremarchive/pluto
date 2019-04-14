@@ -23,7 +23,7 @@ if os.path.isfile(home + '/.config/pluto/config'):
     with io.open('config', 'r') as config:
         for line in config:
             command = line.split(' ')[0]
-            if command == "#" or line.isspace() or line == "\n" or line == "":
+            if command[0] == "#" or line.isspace() or line == "\n" or line == "":
                 pass
             elif command == "dir-slash":
                 if line.split(' ')[1].rstrip() == "true":
@@ -90,6 +90,15 @@ if os.path.isfile(home + '/.config/pluto/config'):
                     keyMaps[line.split(' ')[2].rstrip()] = ord(" ")
                 else:
                     keyMaps[line.split(' ')[2].rstrip()] = ord(str(line.split(' ')[1].rstrip()))
+            elif command == "arrow-select":
+                if line.split(' ')[1].rstrip() == "true":
+                    arrowSelect = True
+                elif line.split(' ')[1].rstrip() == "false":
+                    arrowSelect = False
+            elif command == "arrow":
+                arrow = line.split(' ')[1].rstrip()
+            elif command == "arrow-color":
+                arrowColor = int(line.split(' ')[1].rstrip())
             else:
                 print("\033[31;1;3mError:\033[0m " + line.rstrip())
                 exit()

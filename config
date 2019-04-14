@@ -27,3 +27,7 @@ open term file vi
 
 color dir 5
 color file 20
+
+arrow-select off
+arrow >
+arrow-color 0

@@ -96,6 +96,10 @@ def selFile(array, index):
     s.move(currY, currX)
     colorText(array[index], selType)
     s.move(currY, currX)
+    if arrowSelect:
+        s.move(currY, 0)
+        s.addstr(arrow, color_pair(arrowColor))
+        s.move(currY, currX)
 
 def dSelFile(array, index):
     s.move(currY, currX)
