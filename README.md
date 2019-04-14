@@ -77,3 +77,11 @@ A configuration file is located in ```~/.config/pluto```. This allows you to opt
 
 * ```color [dir/file/file extension] n```
 > Set the color of any file, dir or matching file extension to n
+
+## Arrow
+* ```arrow-select [true/false]
+> Enable arrow select
+* ```arrow [string]```
+> Define what the arrow is
+* ```arrow-color [n]```
+> Define what color the arrow is
