@@ -1,3 +1,5 @@
+<p align="center"><b>Notice: This program is deprecated! I "rewrote" it in go and it has a lot more features! Check out geremachek/catfm!</b></p>
+
 <h1 align="center"><i>Pluto</i></h1>
  
 <p align="center">A simple and rice-able file manager.</center>
